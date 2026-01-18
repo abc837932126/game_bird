@@ -1,0 +1,84 @@
+<template>
+  <div class="grid grid-cols-5 border-t bg-white">
+    <div
+      v-for="nav in navList"
+      :key="nav.name"
+      @click="game.page = nav.name"
+      :class="['py-3 text-center cursor-pointer', game.page === nav.name ? 'text-purple-500' : 'text-gray-500']"
+    >
+      <!-- 如果是好友导航且有待处理申请，显示红点 -->
+      <el-badge v-if="nav.name === 'page_friend'" :value="pendingCount" :hidden="pendingCount === 0" type="danger" :offset="[5, 0]">
+        <div class="text-xl">{{ nav.icon }}</div>
+      </el-badge>
+      <div v-else class="text-xl">{{ nav.icon }}</div>
+      <div class="text-xs mt-1">{{ nav.label }}</div>
+    </div>
+    <!-- 全屏按钮 -->
+    <div
+      @click="toggleFullscreen"
+      class="py-3 text-center cursor-pointer text-gray-500"
+    >
+      <div class="text-xl">{{ fullscreenIcon }}</div>
+      <div class="text-xs mt-1">全屏</div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { inject, ref, computed, onMounted, onUnmounted } from 'vue'
+import { ElBadge } from 'element-plus'
+import screenfull from 'screenfull'
+
+const game = inject('game')
+const isFullscreen = ref(false)
+
+// 获取待处理好友申请数量
+const pendingCount = computed(() => {
+  return game.player_friend?.pendingCount || 0
+})
+
+const navList = [
+  { name: 'page_home', label: '首页', icon: '🏠' },
+  { name: 'page_player_item', label: '背包', icon: '🎒' },
+  { name: 'page_shop', label: '商店', icon: '🛒' },
+  { name: 'page_ladder', label: '天梯', icon: '🏆' },
+  { name: 'page_chat', label: '聊天', icon: '💬' },
+  { name: 'page_friend', label: '好友', icon: '👥' },
+  { name: 'page_player_info', label: '我的', icon: '👤' },
+  { name: 'page_player_bird', label: '仓库', icon: '🐦' },
+  { name: 'page_jiaotang', label: '教堂', icon: '⛪' }
+]
+
+// 全屏切换功能
+const toggleFullscreen = () => {
+  if (screenfull.isEnabled) {
+    screenfull.toggle()
+  }
+}
+
+// 监听全屏状态变化
+const handleFullscreenChange = () => {
+  if (screenfull.isEnabled) {
+    isFullscreen.value = screenfull.isFullscreen
+  }
+}
+
+onMounted(() => {
+  if (screenfull.isEnabled) {
+    screenfull.on('change', handleFullscreenChange)
+  }
+  // 加载待处理好友申请数量
+  if (game.player_friend) {
+    game.player_friend.updatePending()
+  }
+})
+
+onUnmounted(() => {
+  if (screenfull.isEnabled) {
+    screenfull.off('change', handleFullscreenChange)
+  }
+})
+
+// 全屏按钮显示的图标
+const fullscreenIcon = computed(() => isFullscreen.value ? '🗗' : '⛶')
+</script>

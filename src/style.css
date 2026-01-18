@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+}
+
+
+
+#app {
+    width: 100%;
+    min-height: 100vh;
+    color: white;
+    font-size: 14px;
+    background: radial-gradient(1200px 900px at 50% -10%, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, 0) 60%), linear-gradient(180deg, #0a1628 0%, #0c2a36 40%, #0e3a36 100%);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.card{
+    background: #F7EFE3;
+    padding: 2px !important;
+    margin: 4px !important;
+    border-radius: 6px;
+    color: #0a1628;
+
+}
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+}
