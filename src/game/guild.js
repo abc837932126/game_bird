@@ -20,6 +20,8 @@ class api {
 	search = (data) => request('guild', 'search', data)
 
 	get_list = (data) => request('guild', 'get_list', data)
+
+	claim_salary = () => request('guild', 'claim_salary')
 }
 
 export default class guild {

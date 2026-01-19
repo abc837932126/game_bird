@@ -6,23 +6,23 @@
 					<div class="flex-1">
 						<div class="flex items-center gap-2 mb-1">
 							<span class="font-bold">{{ member.player?.nickname }}</span>
-							<el-tag v-if="member.role === 'leader'" type="danger" size="small">会长</el-tag>
-							<el-tag v-else-if="member.role === 'officer'" type="warning" size="small">官员</el-tag>
-							<el-tag v-else type="info" size="small">成员</el-tag>
+							<el-tag :type="getPositionTagType(getMemberPositionLv(member))" size="small">
+								{{ getPositionName(getMemberPositionLv(member)) }}
+							</el-tag>
 						</div>
 						<div class="text-xs text-gray-500">
 							<span>贡献: {{ member.contribution }}</span>
 							<span class="ml-3">加入时间: {{ formatDate(member.join_time) }}</span>
 						</div>
 					</div>
-					<div v-if="canManage && member.role !== 'leader' && member.player_id !== game.player.data.id" class="flex gap-2">
-						<el-button v-if="member.role === 'member' && myRole === 'leader'" size="small" @click="handlePromote(member)">
+					<div v-if="canShowActions(member)" class="flex gap-2">
+						<el-button v-if="canPromoteMember(game.guild.data, getMemberPositionLv(member))" size="small" @click="handlePromote(member)">
 							升职
 						</el-button>
-						<el-button v-if="member.role === 'officer' && myRole === 'leader'" size="small" @click="handleDemote(member)">
+						<el-button v-if="canDemoteMember(game.guild.data, getMemberPositionLv(member))" size="small" @click="handleDemote(member)">
 							降职
 						</el-button>
-						<el-button size="small" type="danger" @click="handleKick(member)">
+						<el-button v-if="canKickMember(game.guild.data, getMemberPositionLv(member), member.player_id === game.player.data.id)" size="small" type="danger" @click="handleKick(member)">
 							踢出
 						</el-button>
 					</div>
@@ -42,17 +42,31 @@
 </template>
 
 <script setup>
-import { inject, ref, computed } from 'vue'
+import { inject, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+	getPositionName,
+	getPositionTagType,
+	getMemberPositionLv,
+	getMyPositionLv,
+	canPromoteMember,
+	canDemoteMember,
+	canKickMember,
+	canManageGuild
+} from '@/utils/guild-position'
 
 const game = inject('game')
 const vis = ref(false)
 const members = ref([])
-const myRole = ref('')
 
-const canManage = computed(() => {
-	return myRole.value === 'leader' || myRole.value === 'officer'
-})
+const canShowActions = (member) => {
+	const myPositionLv = getMyPositionLv(game.guild.data)
+	const memberPositionLv = getMemberPositionLv(member)
+	// 只能操作职位比自己低的成员，且不能操作自己
+	return canManageGuild(game.guild.data) &&
+		memberPositionLv > myPositionLv &&
+		member.player_id !== game.player.data.id
+}
 
 const show = async () => {
 	vis.value = true
@@ -62,8 +76,6 @@ const show = async () => {
 const loadMembers = async () => {
 	const guildId = game.guild.data?.id
 	if (!guildId) return
-
-	myRole.value = game.guild.data?.my_role || ''
 
 	const res = await game.guild_member.api.get_members({ guild_id: guildId })
 	if (res.code === 200) {

@@ -76,6 +76,12 @@
               <div class="text-sm">成员列表</div>
             </div>
           </el-card>
+          <el-card @click="handleSalary" class="cursor-pointer hover:shadow-lg transition-shadow">
+            <div class="text-center py-2">
+              <div class="text-3xl mb-1">💰</div>
+              <div class="text-sm">领取工资</div>
+            </div>
+          </el-card>
           <el-card @click="handleInvite" v-if="canManage" class="cursor-pointer hover:shadow-lg transition-shadow">
             <div class="text-center py-2">
               <div class="text-3xl mb-1">📨</div>
@@ -132,13 +138,14 @@
     <GuildSettingsDialog ref="settingsDialogRef"/>
     <GuildInvitesDialog ref="invitesDialogRef"/>
     <GuildApplicationsDialog ref="applicationsDialogRef"/>
+    <GuildSalaryDialog ref="salaryDialogRef"/>
   </div>
 </template>
 
 <script setup>
 import {inject, computed, ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox, ElBadge} from 'element-plus'
-import {getImageUrl} from '@/config/oss'
+import { getPositionName, canManageGuild, getMyPositionLv } from '@/utils/guild-position'
 import CreateGuildDialog from './CreateGuildDialog.vue'
 import SearchGuildDialog from './SearchGuildDialog.vue'
 import GuildInfoDialog from './GuildInfoDialog.vue'
@@ -146,6 +153,7 @@ import GuildMembersDialog from './GuildMembersDialog.vue'
 import GuildSettingsDialog from './GuildSettingsDialog.vue'
 import GuildInvitesDialog from './GuildInvitesDialog.vue'
 import GuildApplicationsDialog from './GuildApplicationsDialog.vue'
+import GuildSalaryDialog from './GuildSalaryDialog.vue'
 
 const game = inject('game')
 const createDialogRef = ref(null)
@@ -155,6 +163,7 @@ const membersDialogRef = ref(null)
 const settingsDialogRef = ref(null)
 const invitesDialogRef = ref(null)
 const applicationsDialogRef = ref(null)
+const salaryDialogRef = ref(null)
 
 // 工会列表相关
 const guildList = ref([])
@@ -168,18 +177,14 @@ const myGuild = computed(() => {
 // 职位标签
 const roleLabel = computed(() => {
   if (!myGuild.value) return ''
-  const roleMap = {
-    leader: '会长',
-    officer: '官员',
-    member: '成员'
-  }
-  return roleMap[myGuild.value.my_role] || '成员'
+  const positionLv = getMyPositionLv(myGuild.value)
+  return getPositionName(positionLv)
 })
 
 // 是否有管理权限 (会长或官员)
 const canManage = computed(() => {
   if (!myGuild.value) return false
-  return myGuild.value.my_role === 'leader' || myGuild.value.my_role === 'officer'
+  return canManageGuild(myGuild.value)
 })
 
 // 待处理申请数量
@@ -237,6 +242,11 @@ const handleSearch = () => {
 // 查看成员列表
 const handleViewMembers = () => {
   membersDialogRef.value?.show()
+}
+
+// 领取工资
+const handleSalary = () => {
+  salaryDialogRef.value?.show()
 }
 
 // 邀请成员

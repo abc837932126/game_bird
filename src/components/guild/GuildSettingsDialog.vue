@@ -28,7 +28,7 @@
 			</div>
 
 			<!-- 危险操作区域 -->
-			<div v-if="isLeader" class="border-t pt-4 mt-4">
+			<div v-if="isLeaderRole" class="border-t pt-4 mt-4">
 				<div class="text-sm font-medium mb-3 text-red-600">危险操作</div>
 				<el-button type="danger" @click="handleDisband">
 					解散工会
@@ -48,6 +48,7 @@
 <script setup>
 import { inject, ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { isLeader, getMyPositionLv } from '@/utils/guild-position'
 
 const game = inject('game')
 const vis = ref(false)
@@ -58,8 +59,9 @@ const formData = ref({
 	announcement: ''
 })
 
-const isLeader = computed(() => {
-	return game.guild.data?.my_role === 'leader'
+const isLeaderRole = computed(() => {
+	const positionLv = getMyPositionLv(game.guild.data)
+	return isLeader(positionLv)
 })
 
 const show = () => {

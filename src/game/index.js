@@ -1,4 +1,5 @@
 import {reactive} from 'vue'
+import { canManageGuild } from '@/utils/guild-position'
 
 import game_config from './game_config.js'
 import game_title from "./game_title.js";
@@ -133,7 +134,7 @@ class Game {
 		await this.guild.update()
 
 		// 如果玩家是工会管理员，加载工会申请列表
-		if (this.guild.data?.id && (this.guild.data?.my_role === 'leader' || this.guild.data?.my_role === 'officer')) {
+		if (this.guild.data?.id && canManageGuild(this.guild.data)) {
 			await this.guild_application.updateGuildApplications(this.guild.data.id)
 		}
 

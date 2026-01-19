@@ -115,7 +115,7 @@
     <LineupDialog ref="lineupDialogRef"/>
 
     <!-- 对战界面对话框 -->
-    <LadderBattleDialog ref="battleDialogRef"/>
+    <CommonBattleDialog ref="battleDialogRef"/>
   </div>
 </template>
 
@@ -125,8 +125,7 @@ import {ElMessage} from 'element-plus'
 import {Loading} from '@element-plus/icons-vue'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 import LineupDialog from './LineupDialog.vue'
-import {getImageUrl} from '@/config/oss'
-import LadderBattleDialog from './LadderBattleDialog.vue'
+import CommonBattleDialog from '../common/CommonBattleDialog.vue'
 
 const game = inject('game')
 
@@ -207,7 +206,7 @@ const loadRankList = async () => {
 }
 
 // 打开对战界面
-const openBattleDialog = (player) => {
+const openBattleDialog = async (player) => {
   if (player.is_current_player) {
     ElMessage.warning('不能挑战自己')
     return
@@ -216,7 +215,34 @@ const openBattleDialog = (player) => {
     ElMessage.warning('该玩家尚未设置阵容')
     return
   }
-  battleDialogRef.value?.show(player)
+
+  // 获取玩家天梯阵容
+  await game.player_ladder_lineup.getLineup()
+  const myLineup = game.player_ladder_lineup.data.lineup
+
+  battleDialogRef.value?.show({
+    title: '天梯对战',
+    opponentName: player.nickname,
+    opponentInfo: `⭐${player.score}`,
+    showLineup: true,
+    challengerLineup: myLineup,
+    targetLineup: player.lineup,
+    battleFunction: async () => {
+      return await game.player_ladder_score.challenge(player.player_id)
+    },
+    onBattleComplete: async (response) => {
+      await game.player.update()
+      await game.player_ladder_score.getRank(selectedMapId.value)
+
+      // 更新对手分数
+      const updatedOpponent = game.player_ladder_score.data.rank_list?.find(
+        p => p.player_id === player.player_id
+      )
+      if (updatedOpponent) {
+        player.score = updatedOpponent.score
+      }
+    }
+  })
 }
 
 // 页面加载时初始化
