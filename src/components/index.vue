@@ -1,13 +1,13 @@
 <template>
 	<el-card class="min-h-screen w-full" :body-style="{ padding: 0 }">
 		<!-- 横幅图片 -->
-		<div class="h-48 bg-linear-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-			<span class="text-6xl">🐦</span>
+		<div class="h-48 flex items-center justify-center bg-center bg-cover",
+			 style="background-image:url('https://bird.cn-nb1.rains3.com/img/bg/bird_game_big.png');">
 		</div>
 
 		<!-- 文字简介 -->
 		<div class="text-center py-4 px-6">
-			<h1 class="text-2xl font-bold">Bird Index</h1>
+			<h1 class="text-2xl font-bold">Bird Game</h1>
 			<p class="text-gray-500 mt-2">一款有趣的小鸟冒险游戏</p>
 		</div>
 
