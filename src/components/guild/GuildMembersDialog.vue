@@ -2,7 +2,13 @@
 	<el-dialog v-model="vis" title="成员列表" width="90%" :close-on-click-modal="true">
 		<div v-if="members.length > 0" class="space-y-2 max-h-96 overflow-y-auto">
 			<el-card v-for="member in members" :key="member.id" class="hover:shadow-md transition-shadow">
-				<div class="flex justify-between items-center">
+				<div class="flex items-center gap-3">
+					<PlayerAvatar
+						:player-id="member.player?.id"
+						:sex="member.player?.sex"
+						:avatar-frame-id="member.player?.avatar_frame_id"
+						:size="60"
+					/>
 					<div class="flex-1">
 						<div class="flex items-center gap-2 mb-1">
 							<span class="font-bold">{{ member.player?.nickname }}</span>
@@ -44,6 +50,7 @@
 <script setup>
 import { inject, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import {
 	getPositionName,
 	getPositionTagType,
