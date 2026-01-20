@@ -9,12 +9,17 @@ class api {
 	get_bird = (params) => request('player_trap', 'get_bird', params)
 
 	use_player_item_trap_buff = (params) => request('player_trap', 'use_player_item_trap_buff', params)
+
+	unlock_trap = (params) => request('player_trap', 'unlock_trap', params)
+
+	getConfig = (params) => request('player_trap', 'get_config', params)
 }
 
 export default class player_trap {
 
 	constructor() {
 		this.data = null;
+		this.config = null;
 		this.api = new api();
 	}
 
@@ -66,5 +71,16 @@ export default class player_trap {
 		return await this.api.use_player_item_trap_buff({trap_id, item_id});
 	}
 
+	async unlock_trap() {
+		return await this.api.unlock_trap({});
+	}
+
+	async loadConfig() {
+		const res = await this.api.getConfig();
+		if (res.code === 200) {
+			this.config = res.data;
+		}
+		return res;
+	}
 
 }
