@@ -4,9 +4,9 @@
 
 
       <!-- 工会信息区域 (如果已加入工会) -->
-      <div v-if="myGuild" class="mb-4 p-4 bg-white rounded-lg shadow">
+      <div v-if="myGuild" class="mb-4 p-4 bg-white rounded-lg ">
         <!-- 描述和公告 - 两列布局 -->
-        <div class="grid grid-cols-2 gap-4 mb-3">
+        <div class="grid grid-cols-2 gap-4 mb-5!">
           <!-- 左侧：描述 -->
           <div class="border border-gray-300 rounded p-3">
             <div class="text-xs text-gray-500 mb-1">工会描述</div>
@@ -22,7 +22,19 @@
         <!-- 工会名称和等级 -->
         <div class="flex justify-between items-center mb-3">
           <div class="text-xl font-bold">{{ myGuild.nickname }}</div>
-          <div class="text-sm text-gray-700">等级: {{ myGuild.level }}</div>
+          <div class="text-sm text-gray-700">{{ myGuild.level }}级</div>
+        </div>
+
+        <!-- 经验进度条 -->
+        <div class="mb-3">
+          <el-progress
+            :percentage="expPercentage"
+            :stroke-width="8"
+            :show-text="false"
+          />
+          <div class="flex justify-end text-xs text-gray-500 mt-1">
+            <span>{{ myGuild.exp}} /{{myGuild.next_level_exp}}</span>
+          </div>
         </div>
 
         <!-- 分隔线 -->
@@ -145,7 +157,7 @@
 <script setup>
 import {inject, computed, ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox, ElBadge} from 'element-plus'
-import { getPositionName, canManageGuild, getMyPositionLv } from '@/utils/guild-position'
+import { canManageGuild } from '@/utils/guild-position'
 import CreateGuildDialog from './CreateGuildDialog.vue'
 import SearchGuildDialog from './SearchGuildDialog.vue'
 import GuildInfoDialog from './GuildInfoDialog.vue'
@@ -174,12 +186,6 @@ const myGuild = computed(() => {
   return game.guild.data
 })
 
-// 职位标签
-const roleLabel = computed(() => {
-  if (!myGuild.value) return ''
-  const positionLv = getMyPositionLv(myGuild.value)
-  return getPositionName(positionLv)
-})
 
 // 是否有管理权限 (会长或官员)
 const canManage = computed(() => {
@@ -190,6 +196,14 @@ const canManage = computed(() => {
 // 待处理申请数量
 const pendingApplicationCount = computed(() => {
   return game.guild_application?.pendingCount || 0
+})
+
+// 经验百分比
+const expPercentage = computed(() => {
+  if (!myGuild.value) return 0
+  const exp = myGuild.value.exp || 0
+  const nextLevelExp = myGuild.value.next_level_exp || 1
+  return Math.floor((exp / nextLevelExp) * 100)
 })
 
 // 页面加载时刷新工会信息
