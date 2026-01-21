@@ -6,6 +6,7 @@ import game_title from "./game_title.js";
 import game_map from "./game_map.js";
 
 import game_item_bait from "./game_item_bait.js";
+import game_item_common from "./game_item_common.js";
 import game_item_trap_buff from "./game_item_trap_buff.js";
 import game_item_nest_buff from "./game_item_nest_buff.js";
 import game_item_train_buff from "./game_item_train_buff.js";
@@ -17,6 +18,7 @@ import game_item_nest from "./game_item_nest.js";
 import game_item_gift from "./game_item_gift.js";
 import game_avatar_frame from "./game_avatar_frame.js";
 import player_item_bait from "./player_item_bait.js";
+import player_item_common from "./player_item_common.js";
 import player_item_trap_buff from "./player_item_trap_buff.js";
 import player_item_nest_buff from "./player_item_nest_buff.js";
 import player_item_train_buff from "./player_item_train_buff.js";
@@ -62,6 +64,7 @@ class Game {
 		this.game_map = new game_map();
 
 		this.game_item_bait = new game_item_bait();
+		this.game_item_common = new game_item_common();
 		this.game_item_trap_buff = new game_item_trap_buff();
 		this.game_item_nest_buff = new game_item_nest_buff();
 		this.game_item_train_buff = new game_item_train_buff();
@@ -74,6 +77,7 @@ class Game {
 		this.game_avatar_frame = new game_avatar_frame();
 		this.game_bird = new game_bird();
 		this.player_item_bait = new player_item_bait();
+		this.player_item_common = new player_item_common();
 		this.player_item_trap_buff = new player_item_trap_buff();
 		this.player_item_nest_buff = new player_item_nest_buff();
 		this.player_item_train_buff = new player_item_train_buff();

@@ -12,22 +12,14 @@
 
     <!-- 右侧：余额显示 -->
     <div class="flex items-center gap-3 text-sm">
-      <div class="flex items-center gap-1">
-        <span>💰</span>
-        <span class="font-medium text-yellow-600">
-          {{ game.player.data?.balance_1 || 0 }}
-        </span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span>💎</span>
-        <span class="font-medium text-blue-600">
-          {{ game.player.data?.balance_2 || 0 }}
-        </span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span>🪙</span>
-        <span class="font-medium text-purple-600">
-          {{ game.player.data?.balance_3 || 0 }}
+      <div
+        v-for="balance in game.player.data?.player_balance || []"
+        :key="balance.balance_id"
+        class="flex items-center gap-1"
+      >
+        <span>{{ getBalanceEmoji(balance.balance_id) }}</span>
+        <span :class="getBalanceColorClass(balance.balance_id)">
+          {{ balance.count || 0 }}
         </span>
       </div>
     </div>
@@ -38,4 +30,22 @@
 import { inject } from 'vue'
 
 const game = inject('game')
+
+const getBalanceEmoji = (balanceId) => {
+  const emojiMap = {
+    1: '💰',
+    2: '💎',
+    3: '🪙'
+  }
+  return emojiMap[balanceId] || '💰'
+}
+
+const getBalanceColorClass = (balanceId) => {
+  const colorMap = {
+    1: 'font-medium text-yellow-600',
+    2: 'font-medium text-blue-600',
+    3: 'font-medium text-purple-600'
+  }
+  return colorMap[balanceId] || 'font-medium text-gray-600'
+}
 </script>

@@ -96,14 +96,18 @@ const form = ref({
   is_password: false
 })
 
-// 获取玩家余额（固定显示 balance_3）
+// 获取玩家余额（红包使用的货币类型，默认为3-星币）
 const playerBalance = computed(() => {
-  return game.player.data?.balance_3 || 0
+  const redPacketBalanceId = game.game_config.get_value('game', 'red_packet_balance_id') || 3
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === redPacketBalanceId)
+  return balance?.count || 0
 })
 
-// 获取玩家余额类型标签（固定显示 balance_3 的类型）
+// 获取玩家余额类型标签
 const playerBalanceType = computed(() => {
-  return game.game_config.get_value('game', 'balance_type')?.[3] || ''
+  const redPacketBalanceId = game.game_config.get_value('game', 'red_packet_balance_id') || 3
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === redPacketBalanceId)
+  return balance?.game_config_player_balance?.nickname || ''
 })
 
 // 是否可以发送

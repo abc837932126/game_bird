@@ -14,6 +14,10 @@ class api {
 
 	reincarnate = (player_bird_id) => request('player_bird', 'reincarnate', { player_bird_id })
 
+	useGrowthPotion = (player_bird_id) => request('player_bird', 'use_growth_potion', { player_bird_id })
+
+	useStabilizer = (player_bird_id) => request('player_bird', 'use_stabilizer', { player_bird_id })
+
 }
 
 
@@ -67,6 +71,27 @@ export default class player_bird {
 	// 转生
 	async reincarnate(player_bird_id) {
 		const res = await this.api.reincarnate(player_bird_id);
+
+		if (res.code === 200) {
+			await this.update();
+		}
+
+		return res;
+	}
+
+	// 使用成长药水
+	async useGrowthPotion(player_bird_id) {
+		const res = await this.api.useGrowthPotion(player_bird_id);
+
+		if (res.code === 200) {
+			await this.update();
+		}
+
+		return res;
+	}
+
+	async useStabilizer(player_bird_id) {
+		const res = await this.api.useStabilizer(player_bird_id);
 
 		if (res.code === 200) {
 			await this.update();

@@ -24,17 +24,13 @@
 				<span class="text-gray-600">💖 魅力值</span>
 				<span class="font-medium">{{ userInfo.charm || 0 }}</span>
 			</div>
-			<div class="flex items-center justify-between">
-				<span class="text-gray-600">💰 {{ get_balance_label('balance_1') }}</span>
-				<span class="font-medium">{{ userInfo.balance_1 || 0 }}</span>
-			</div>
-			<div class="flex items-center justify-between">
-				<span class="text-gray-600">💎 {{ get_balance_label('balance_2') }}</span>
-				<span class="font-medium">{{ userInfo.balance_2 || 0 }}</span>
-			</div>
-			<div class="flex items-center justify-between">
-				<span class="text-gray-600">🪙 {{ get_balance_label('balance_3') }}</span>
-				<span class="font-medium">{{ userInfo.balance_3 || 0 }}</span>
+			<div
+				v-for="balance in userInfo.player_balance || []"
+				:key="balance.balance_id"
+				class="flex items-center justify-between"
+			>
+				<span class="text-gray-600">{{ getBalanceEmoji(balance.balance_id) }} {{ balance.game_config_player_balance?.nickname || '未知' }}</span>
+				<span class="font-medium">{{ balance.count || 0 }}</span>
 			</div>
 			<div v-if="userInfo.title" class="flex items-center justify-between col-span-2">
 				<span class="text-gray-600">称号</span>
@@ -71,10 +67,13 @@ const mapName = computed(() => {
 	return map?.nickname || '未知'
 })
 
-// 获取货币标签
-const get_balance_label = (key) => {
-	const num = key.replace('balance_', '')
-	const config = game.game_config.get_value('game','balance_type')
-	return config?.[num] || '未知'
+// 获取余额表情符号
+const getBalanceEmoji = (balanceId) => {
+	const emojiMap = {
+		1: '💰',
+		2: '💎',
+		3: '🪙'
+	}
+	return emojiMap[balanceId] || '💰'
 }
 </script>

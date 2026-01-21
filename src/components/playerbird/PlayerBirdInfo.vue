@@ -1,5 +1,5 @@
 <template>
-	<el-dialog v-model="vis" class="p-0!" width="90%" :show-close="false" header-class="p-0!" center>
+	<el-dialog v-model="vis" class="p-0!" width="90%" align-center :show-close="false" header-class="p-0!" center>
 		<!-- 鸟类大图 -->
 		<el-image :src="getImageUrl('bird', bird?.game_bird?.nickname)" fit="cover" loading="lazy" class="max-h-64 w-full">
 			<template #placeholder>
@@ -66,7 +66,7 @@
 					<span class="text-gray-600">价格:</span>
 					<span class="font-bold text-yellow-600">
 						{{ bird?.game_bird?.price || 0 }}
-						{{ game.game_config.get_value('game', 'balance_type')?.[bird?.game_bird?.price_type] }}
+						{{ bird?.game_bird?.game_config_player_balance?.nickname || '金币' }}
 					</span>
 				</div>
 			</div>
@@ -94,22 +94,42 @@
 				</div>
 			</div>
 
-			<!-- 按钮 -->
-			<div class="flex flex-wrap justify-between gap-2 mt-2">
-				<el-button type="primary" @click="vis = false">关闭</el-button>
-				<div class="flex flex-wrap gap-2">
-					<el-button type="info" @click="showExpCardSelection">使用经验卡</el-button>
-					<el-button type="success" @click="handleSell" :disabled="!!bird?.status">
-						{{ bird?.status ? '无法出售' : '出售' }}
-					</el-button>
-					<el-button
-						type="danger"
-						@click="handleReincarnate"
-						:disabled="(bird?.lv || 1) < 100"
+			<!-- 高级技能 -->
+			<div class="p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded">
+				<div class="text-sm font-bold mb-2">高级技能</div>
+				<div v-if="birdSkills.length > 0" class="flex flex-wrap gap-2">
+					<el-tag
+						v-for="skill in birdSkills"
+						:key="skill.id"
+						:type="skill.is_equipped ? 'success' : 'info'"
+						size="small"
 					>
-						{{ bird?.lv >= 100 ? '转生' : `转生(${bird?.lv || 1}/100)` }}
-					</el-button>
+						{{ skill.game_skill?.nickname || '未知技能' }}
+						<span v-if="skill.is_equipped"> ✓</span>
+					</el-tag>
 				</div>
+				<div v-else class="text-sm text-gray-400">
+					暂无技能
+				</div>
+			</div>
+
+			<!-- 按钮 -->
+			<div class="grid grid-cols-2 gap-2 mt-2">
+				<el-button class="m-0!" type="info" @click="showExpCardSelection">使用经验卡</el-button>
+				<el-button class="m-0!" type="warning" @click="handleUseGrowthPotion">洗练成长</el-button>
+				<el-button class="m-0!" type="primary" @click="handleUseStabilizer">使用稳定剂({{ stabilizerCount }})</el-button>
+				<el-button class="m-0!" type="success" @click="handleSell" :disabled="!!bird?.status">
+					{{ bird?.status ? '无法出售' : '出售' }}
+				</el-button>
+				<el-button
+					type="danger"
+          class="m-0!"
+					@click="handleReincarnate"
+					:disabled="(bird?.lv || 1) < 100"
+				>
+					{{ bird?.lv >= 100 ? '转生' : `转生(${bird?.lv || 1}/100)` }}
+				</el-button>
+				<el-button type="primary" @click="vis = false" class="m-0!">关闭</el-button>
 			</div>
 		</div>
 	</el-dialog>
@@ -189,6 +209,21 @@ const bird = ref(null)
 const expCardSelectionVisible = ref(false)
 const selectedExpCard = ref(null)
 const useCount = ref(1)
+
+// 计算当前鸟的技能列表
+const birdSkills = computed(() => {
+	if (!bird.value?.player_bird_skill) return []
+	return bird.value.player_bird_skill
+})
+
+// 计算稳定剂数量
+const stabilizerCount = computed(() => {
+	if (!game.player_item_common.data) return 0
+	const stabilizer = game.player_item_common.data.find(item =>
+		item.game_item_common?.nickname?.includes('稳定剂')
+	)
+	return stabilizer ? stabilizer.count : 0
+})
 
 const show = (birdData) => {
 	bird.value = birdData
@@ -279,7 +314,7 @@ const handleSell = async () => {
 	// 计算预估价格用于确认对话框（基础价格 × 体重，不足1斤按1斤算）
 	const weight = Math.max(1, Math.floor(bird.value.weight || 0))
 	const estimatedPrice = basePrice * weight
-	const currencyType = game.game_config.get_value('game', 'balance_type')?.[bird.value.game_bird.price_type] || '金币'
+	const currencyType = bird.value.game_bird.game_config_player_balance?.nickname || '金币'
 
 	try {
 		// 确认对话框
@@ -347,6 +382,78 @@ const handleReincarnate = async () => {
 	} catch (error) {
 		if (error !== 'cancel') {
 			ElMessage.error('转生失败: ' + (error.message || error))
+		}
+	}
+}
+
+// 使用成长药水
+const handleUseGrowthPotion = async () => {
+	if (!bird.value) return
+
+	try {
+		await ElMessageBox.confirm(
+			`确定要使用成长药水洗练 ${bird.value.game_bird.nickname} 的成长值吗？\n\n当前成长值: ${bird.value.grow.toFixed(2)}\n\n洗练后将随机获得 0.1-5.0 之间的成长值`,
+			'洗练确认',
+			{
+				confirmButtonText: '确认洗练',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		)
+
+		const response = await game.player_bird.useGrowthPotion(bird.value.id)
+
+		if (response.code === 200) {
+			ElMessage.success(response.data.message || '洗练成功')
+			// 更新玩家道具数据
+			await game.player_item_common.update()
+			// 更新当前显示的鸟数据
+			const updatedBird = game.player_bird.data.find(b => b.id === bird.value.id)
+			if (updatedBird) {
+				bird.value = updatedBird
+			}
+		} else {
+			ElMessage.error(response.msg || '洗练失败')
+		}
+	} catch (error) {
+		if (error !== 'cancel') {
+			ElMessage.error('洗练失败: ' + (error.message || error))
+		}
+	}
+}
+
+// 使用稳定剂
+const handleUseStabilizer = async () => {
+	if (!bird.value) return
+
+	try {
+		await ElMessageBox.confirm(
+			`确定要使用稳定剂吗？\n\n稳定剂的作用：随机获得一个高级技能`,
+			'使用确认',
+			{
+				confirmButtonText: '确认使用',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		)
+
+		const response = await game.player_bird.useStabilizer(bird.value.id)
+
+		if (response.code === 200) {
+			ElMessage.success(response.data.message || '使用成功')
+			// 更新玩家道具数据
+			await game.player_item_common.update()
+			// 更新当前显示的鸟数据
+			const updatedBird = game.player_bird.data.find(b => b.id === bird.value.id)
+			if (updatedBird) {
+				bird.value = updatedBird
+			}
+		} else {
+			ElMessage.error(response.msg || '使用失败')
+		}
+	} catch (error) {
+		if (error !== 'cancel') {
+			ElMessage.error('使用失败: ' + (error.message || error))
 		}
 	}
 }

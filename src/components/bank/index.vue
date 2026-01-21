@@ -89,18 +89,21 @@ const progressColor = computed(() => {
 })
 
 function getCurrencyName(type) {
-	const balanceTypes = game.game_config?.data?.game?.balance_type || {}
-	return balanceTypes[type] || '未知'
+	// 从玩家余额中查找对应的货币名称
+	const balance = game.player?.data?.player_balance?.find(b => b.balance_id === type)
+	return balance?.game_config_player_balance?.nickname || '未知'
 }
 
 function getBankBalance(type) {
-	const balanceField = `bank_balance_${type}`
-	return bankData.value[balanceField] || 0
+	// 从银行余额数组中查找
+	const bankBalance = bankData.value.player_bank_balance?.find(b => b.balance_id === type)
+	return bankBalance?.count || 0
 }
 
 function getWalletBalance(type) {
-	const balanceField = `balance_${type}`
-	return game.player?.data?.[balanceField] || 0
+	// 从玩家余额数组中查找
+	const balance = game.player?.data?.player_balance?.find(b => b.balance_id === type)
+	return balance?.count || 0
 }
 
 async function handleDeposit() {

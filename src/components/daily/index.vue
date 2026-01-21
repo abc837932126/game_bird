@@ -20,7 +20,7 @@
 					<div class="day-weekday">{{ day.weekday_name }}</div>
 					<div class="day-reward">
 						<span v-if="day.isChecked" class="checked-badge">✓ 已签到</span>
-						<span v-else class="reward-amount">+{{ day.reward }} {{ rewardTypeName }}</span>
+						<span v-else class="reward-amount">+{{ day.reward }} {{ day.currencyName }}</span>
 					</div>
 				</div>
 			</div>
@@ -48,7 +48,6 @@ const loading = ref(false)
 
 const hasCheckedInToday = computed(() => checkinData.value?.has_checked_in_today || false)
 const monthlyCount = computed(() => checkinData.value?.monthly_checkin_count || 0)
-const rewardTypeName = computed(() => checkinData.value?.today_reward_type_name || '金币')
 
 const weekDays = computed(() => {
 	if (!checkinData.value) return []
@@ -56,23 +55,23 @@ const weekDays = computed(() => {
 	const today = new Date(checkinData.value.today_date)
 	const checkedDays = checkinData.value.monthly_checkin_days || []
 
-	// 构建星期几到奖励的映射
-	const weekdayRewards = {}
-	weekdayRewards[checkinData.value.today_weekday] = checkinData.value.today_reward_amount
-
-	// 从 next_7_days 中提取其他星期的奖励
+	// 从 next_7_days 中获取每天的奖励和货币信息
 	const next7Days = checkinData.value.next_7_days || []
+	const dayInfoMap = {}
 	next7Days.forEach(day => {
-		weekdayRewards[day.weekday] = day.reward
+		dayInfoMap[day.date] = {
+			reward: day.reward,
+			currencyName: day.currency?.nickname || '金币'
+		}
 	})
 
 	// 计算本周一的日期
-	const dayOfWeek = today.getDay() // 0=周日, 1=周一, ..., 6=周六
+	const dayOfWeek = today.getDay()
 	const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
 	const monday = new Date(today)
 	monday.setDate(today.getDate() + diff)
 
-	// 生成本周7天（周一到周日）
+	// 生成本周7天
 	const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 	const days = []
 
@@ -81,12 +80,14 @@ const weekDays = computed(() => {
 		currentDate.setDate(monday.getDate() + i)
 		const dateStr = currentDate.toISOString().split('T')[0]
 		const weekday = currentDate.getDay()
+		const dayInfo = dayInfoMap[dateStr] || { reward: 100, currencyName: '金币' }
 
 		days.push({
 			date: dateStr,
 			dateDisplay: formatDate(dateStr),
 			weekday_name: weekDayNames[weekday],
-			reward: weekdayRewards[weekday] || 100,
+			reward: dayInfo.reward,
+			currencyName: dayInfo.currencyName,
 			isToday: dateStr === checkinData.value.today_date,
 			isChecked: checkedDays.includes(dateStr)
 		})

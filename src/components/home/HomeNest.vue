@@ -98,9 +98,14 @@
 			<el-button size="small" type="warning" @click="start_pairing()" :disabled="!can_start_pairing()">
 				开始配对
 			</el-button>
-			<el-button size="small" type="danger" @click="harvest()" :disabled="!is_pairing_complete()">
-				收获幼鸟
-			</el-button>
+			<div class="flex items-center gap-2">
+				<el-checkbox v-model="use_fertility_pill" :disabled="!is_pairing_complete() || fertility_pill_count === 0">
+					使用多胎丸 ({{ fertility_pill_count }})
+				</el-checkbox>
+				<el-button size="small" type="danger" @click="harvest()" :disabled="!is_pairing_complete()">
+					收获幼鸟
+				</el-button>
+			</div>
 		</div>
 	</el-card>
 
@@ -145,7 +150,7 @@
 </template>
 
 <script setup>
-import {inject, onMounted, onUnmounted, onActivated, ref} from "vue";
+import {inject, onMounted, onUnmounted, onActivated, ref, computed} from "vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
@@ -158,6 +163,17 @@ const vis_buff_list = ref(false)
 const select_slot = ref(1)
 const timer = ref(null)
 const currentTime = ref(Date.now())
+const use_fertility_pill = ref(false)
+
+// 计算多胎丸数量
+const fertility_pill_count = computed(() => {
+	if (!game.player_item_common.data) return 0
+	// 遍历所有通用道具，找到名称包含"多胎丸"的道具
+	const fertilityPill = game.player_item_common.data.find(item =>
+		item.game_item_common?.nickname?.includes('多胎丸')
+	)
+	return fertilityPill ? fertilityPill.count : 0
+})
 
 const show_bird_list = async (slot) => {
 	await game.player_bird.update()
@@ -260,14 +276,20 @@ const is_pairing_complete = () => {
 }
 
 const harvest = async () => {
-	const res = await game.player_nest.harvest()
+	const res = await game.player_nest.harvest(use_fertility_pill.value)
 	if (res.code !== 200) {
 		ElMessage.error(res.msg)
 		return
 	}
-	ElMessage.success(`收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`)
+	const birdsPerPlayer = res.data.birds_per_player || 1
+	const message = use_fertility_pill.value
+		? `收获成功！使用多胎丸，双方各获得${birdsPerPlayer}只幼鸟，获得经验: ${res.data.player_exp_gained}`
+		: `收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`
+	ElMessage.success(message)
+	use_fertility_pill.value = false // 重置复选框
 	await game.player_bird.update()
 	await game.player.update()
+	await game.player_item_common.update()
 }
 
 const get_nest_desc = () => {

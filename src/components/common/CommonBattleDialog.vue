@@ -107,10 +107,12 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useBattleLog } from '@/composables/useBattleLog'
 import { getImageUrl } from '@/config/oss'
+
+const game = inject('game')
 
 const vis = ref(false)
 const battleResult = ref(null)
@@ -219,7 +221,10 @@ const showFinalResult = () => {
       const rewardText = []
       if (rewards.score) rewardText.push(`天梯分 +${rewards.score}`)
       if (rewards.exp) rewardText.push(`经验 +${rewards.exp}`)
-      if (rewards.balance_1) rewardText.push(`金币 +${rewards.balance_1}`)
+      if (rewards.balance_1) {
+        const currencyName = getCurrencyName(1)
+        rewardText.push(`${currencyName} +${rewards.balance_1}`)
+      }
 
       ElMessage.success({
         message: `恭喜获胜！${rewardText.length > 0 ? '获得：' + rewardText.join('，') : ''}`,
@@ -239,6 +244,12 @@ const showFinalResult = () => {
       ElMessage.warning('很遗憾，挑战失败了！')
     }
   }
+}
+
+// 获取货币名称
+const getCurrencyName = (balanceId) => {
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === balanceId)
+  return balance?.game_config_player_balance?.nickname || '未知'
 }
 
 defineExpose({

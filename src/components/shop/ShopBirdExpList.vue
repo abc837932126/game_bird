@@ -1,5 +1,5 @@
 <template>
-	<div class="grid grid-cols-5 gap-2">
+	<div class="grid grid-cols-4 gap-2">
 		<el-card
 			v-for="item in items"
 			:key="item.id"
@@ -24,7 +24,7 @@
 
 				<!-- 显示价格 -->
 				<p class="text-orange-500">
-					{{ item?.price || 0 }} {{ game.game_config.get_value('game', 'balance_type')?.[item.price_type] }}
+					{{ item?.price || 0 }} {{ item?.game_config_player_balance?.nickname || '未知货币' }}
 				</p>
 
 				<!-- 显示经验值 -->
@@ -56,7 +56,7 @@
 			<div class="text-gray-500 text-sm">{{ currentItem?.desc }}</div>
 
 			<div class="text-lg">
-				价格: {{ currentItem?.price || 0 }} {{ game.game_config.get_value('game', 'balance_type')?.[currentItem?.price_type] }}
+				价格: {{ currentItem?.price || 0 }} {{ currentItem?.game_config_player_balance?.nickname || '未知货币' }}
 			</div>
 
 			<!-- 经验卡片特有：显示经验值 -->

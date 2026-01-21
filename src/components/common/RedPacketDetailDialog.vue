@@ -141,9 +141,11 @@ const bestPlayerId = ref(null)
 const resultVisible = ref(false)
 const claimResult = ref({amount: 0, is_best: false})
 
-// 获取 balance_3 的类型名称
+// 获取红包货币类型名称
 const balanceType = computed(() => {
-  return game.game_config.get_value('game', 'balance_type')?.[3] || ''
+  const redPacketBalanceId = game.game_config.get_value('game', 'red_packet_balance_id') || 3
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === redPacketBalanceId)
+  return balance?.game_config_player_balance?.nickname || ''
 })
 
 // 计算领取进度百分比
