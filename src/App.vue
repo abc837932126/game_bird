@@ -3,16 +3,13 @@
 		<!-- 背景图片 -->
 		<div :style=" {backgroundImage: `url(${getImageUrl('bg' ,'bg')})`}" class="h-full bg-cover absolute inset-0"></div>
 
-
-		<!-- 内容层 -->
+    <!-- 内容层 -->
 		<div class="relative z-10 w-full h-full">
 			<landing v-if="showLanding"/>
 			<Game v-else-if="game.token"/>
 			<Index v-else/>
 		</div>
 	</div>
-
-
 </template>
 
 
