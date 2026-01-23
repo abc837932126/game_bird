@@ -117,7 +117,7 @@
 			<div class="grid grid-cols-2 gap-2 mt-2">
 				<el-button class="m-0!" type="info" @click="showExpCardSelection">使用经验卡</el-button>
 				<el-button class="m-0!" type="warning" @click="handleUseGrowthPotion">洗练成长</el-button>
-				<el-button class="m-0!" type="primary" @click="handleUseStabilizer">使用稳定剂({{ stabilizerCount }})</el-button>
+				<el-button class="m-0!" type="primary" @click="handleUseStabilizer">使用{{ game.game_config_special_items.data?.stabilizer?.nickname || '稳定剂' }}({{ stabilizerCount }})</el-button>
 				<el-button class="m-0!" type="success" @click="handleSell" :disabled="!!bird?.status">
 					{{ bird?.status ? '无法出售' : '出售' }}
 				</el-button>
@@ -219,8 +219,12 @@ const birdSkills = computed(() => {
 // 计算稳定剂数量
 const stabilizerCount = computed(() => {
 	if (!game.player_item_common.data) return 0
+	// 从配置中获取稳定剂的ID
+	const stabilizerId = game.game_config_special_items.data?.stabilizer_id
+	if (!stabilizerId) return 0
+	// 通过ID查找玩家的稳定剂道具
 	const stabilizer = game.player_item_common.data.find(item =>
-		item.game_item_common?.nickname?.includes('稳定剂')
+		item.game_item_common_id === stabilizerId
 	)
 	return stabilizer ? stabilizer.count : 0
 })
@@ -426,9 +430,12 @@ const handleUseGrowthPotion = async () => {
 const handleUseStabilizer = async () => {
 	if (!bird.value) return
 
+	const stabilizerName = game.game_config_special_items.data?.stabilizer?.nickname || '稳定剂'
+	const stabilizerDesc = game.game_config_special_items.data?.stabilizer?.desc || '随机获得一个高级技能'
+
 	try {
 		await ElMessageBox.confirm(
-			`确定要使用稳定剂吗？\n\n稳定剂的作用：随机获得一个高级技能`,
+			`确定要使用${stabilizerName}吗？\n\n${stabilizerName}的作用：${stabilizerDesc}`,
 			'使用确认',
 			{
 				confirmButtonText: '确认使用',

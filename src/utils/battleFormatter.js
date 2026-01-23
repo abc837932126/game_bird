@@ -41,9 +41,24 @@ export function generateSkillLogsHtml(skillLogs) {
 
   return skillLogs.map(log => {
     const ownerName = log.owner.bird_name
-    const skillName = log.skill.name
-    const skillDesc = log.skill.description || ''
     const ownerColor = log.owner.side === 'challenger' ? 'blue' : 'red'
+
+    // 处理克制关系日志
+    if (log.type === 'restraint_bonus') {
+      const effectTexts = log.effects.map(effect => {
+        const targetName = ownerName
+        return formatEffect(effect, targetName)
+      }).join('，')
+
+      return `<div class="skill-trigger restraint">
+        <span class="bird-name ${ownerColor}">${ownerName}</span>
+        克制加成：${effectTexts}
+      </div>`
+    }
+
+    // 处理技能触发日志
+    const skillName = log.skill?.name || '未知技能'
+    const skillDesc = log.skill?.description || ''
 
     const effectTexts = log.effects.map(effect => {
       const targetName = log.targets.find(
@@ -119,19 +134,19 @@ export function generateBattleStartSkillsHtml(battleLog) {
 export function generateBattleTextHtml(log) {
   const challengerBirdName = log.challenger.bird_name
   const targetBirdName = log.target.bird_name
-  const challengerWeight = log.challenger.weight_before.toFixed(2)
-  const targetWeight = log.target.weight_before.toFixed(2)
+  const challengerWeight = log.challenger.battle_weight.toFixed(2)
+  const targetWeight = log.target.battle_weight.toFixed(2)
 
-  // 只显示 round_start 时机的技能（回合开始时触发的技能）
-  const roundStartSkills = log.skill_logs?.filter(s => s.timing === 'round_start') || []
-  const skillLogsHtml = generateSkillLogsHtml(roundStartSkills)
+  // 显示回合开始时的技能和克制关系加成
+  const roundSkills = log.skill_logs?.filter(s => s.timing === 'round_start' || s.type === 'restraint_bonus') || []
+  const skillLogsHtml = generateSkillLogsHtml(roundSkills)
 
   if (log.winner === 'challenger') {
     const weightChange = (log.challenger.weight_before - log.challenger.weight_after).toFixed(2)
     return `${skillLogsHtml}<span class="bird-name blue">${challengerBirdName}</span><span class="bird-weight">(${challengerWeight}kg)</span> 对战 <span class="bird-name red">${targetBirdName}</span><span class="bird-weight">(${targetWeight}kg)</span> <span class="result-win">（胜利）</span> <span class="weight-change">（体重-${weightChange}kg）</span> <span class="bird-down red">（对方${targetBirdName}下场）</span>`
   } else if (log.winner === 'target') {
-    const weightChange = (log.challenger.weight_before - log.challenger.weight_after).toFixed(2)
-    return `${skillLogsHtml}<span class="bird-name blue">${challengerBirdName}</span><span class="bird-weight">(${challengerWeight}kg)</span> 对战 <span class="bird-name red">${targetBirdName}</span><span class="bird-weight">(${targetWeight}kg)</span> <span class="result-lose">（失败）</span> <span class="weight-change">（体重-${weightChange}kg）</span> <span class="bird-down blue">（我方${challengerBirdName}下场）</span>`
+    const weightChange = (log.target.weight_before - log.target.weight_after).toFixed(2)
+    return `${skillLogsHtml}<span class="bird-name blue">${challengerBirdName}</span><span class="bird-weight">(${challengerWeight}kg)</span> 对战 <span class="bird-name red">${targetBirdName}</span><span class="bird-weight">(${targetWeight}kg)</span> <span class="result-lose">（失败）</span> <span class="weight-change">（对方体重-${weightChange}kg）</span> <span class="bird-down blue">（我方${challengerBirdName}下场）</span>`
   } else {
     return `${skillLogsHtml}<span class="bird-name blue">${challengerBirdName}</span><span class="bird-weight">(${challengerWeight}kg)</span> 对战 <span class="bird-name red">${targetBirdName}</span><span class="bird-weight">(${targetWeight}kg)</span> <span class="result-draw">（平局）</span> <span class="bird-down gray">（双方下场）</span>`
   }

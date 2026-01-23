@@ -164,17 +164,16 @@ const startBattle = async () => {
     isAnimating.value = true
     const response = await battleFunction()
 
-    if (response.code !== 200) {
-      ElMessage.error(response.msg)
-      isAnimating.value = false
-      return
-    }
-
-    battleResult.value = response.data.battle_result || response.data
+    // 提取战斗结果（无论成功或失败）
+    battleResult.value = response.data?.battle_result || response.data
 
     // 如果 targetLineup 是占位符，从战斗结果中提取实际的 NPC 阵容
     if (targetLineup.value && targetLineup.value.slot1?.nickname === '???') {
       extractNpcLineup(battleResult.value)
+    }
+
+    if (response.code !== 200) {
+      ElMessage.error(response.msg)
     }
 
     if (onBattleComplete) {

@@ -29,7 +29,7 @@
 							<el-input-number v-model="depositForm.amount" :min="1" />
 						</el-form-item>
 						<el-form-item>
-							<el-button type="primary" @click="handleDeposit">存款 (手续费1%)</el-button>
+							<el-button type="primary" @click="handleDeposit">存款 (手续费{{ bankData.deposit_fee_rate || 1 }}%)</el-button>
 						</el-form-item>
 					</el-form>
 				</el-tab-pane>
@@ -54,7 +54,7 @@
 
 		<el-card class="upgrade-card">
 			<div class="upgrade-info">
-				<div>提升额度: 花费 {{ bankData.upgrade_cost || 100 }} 元宝提升 {{ (bankData.upgrade_rate || 0.1) * 100 }}% 额度</div>
+				<div>提升额度: 花费 {{ bankData.upgrade_cost || 100 }} {{ bankData.upgrade_balance?.nickname || '元宝' }} 提升 {{ bankData.upgrade_rate || 10 }}% 额度</div>
 				<el-button type="warning" @click="handleUpgrade">提升额度</el-button>
 			</div>
 		</el-card>
@@ -73,7 +73,8 @@ const withdrawForm = ref({ currency_type: 1, amount: 100 })
 const bankData = computed(() => game.bank.data || {})
 
 const allowedCurrencyTypes = computed(() => {
-	return bankData.value.allowed_currency_types || [1]
+	if (!bankData.value.allowed_currencies) return [1]
+	return bankData.value.allowed_currencies.map(c => c.balance_id)
 })
 
 const usagePercent = computed(() => {
@@ -90,7 +91,7 @@ const progressColor = computed(() => {
 
 function getCurrencyName(type) {
 	// 从玩家余额中查找对应的货币名称
-	const balance = game.player?.data?.player_balance?.find(b => b.balance_id === type)
+	const balance = game.player?.data?.player_balance?.find(b => b.game_config_player_balance_id === type)
 	return balance?.game_config_player_balance?.nickname || '未知'
 }
 
@@ -102,7 +103,7 @@ function getBankBalance(type) {
 
 function getWalletBalance(type) {
 	// 从玩家余额数组中查找
-	const balance = game.player?.data?.player_balance?.find(b => b.balance_id === type)
+	const balance = game.player?.data?.player_balance?.find(b => b.game_config_player_balance_id === type)
 	return balance?.count || 0
 }
 

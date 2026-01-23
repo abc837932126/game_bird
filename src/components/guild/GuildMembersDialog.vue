@@ -22,8 +22,8 @@
 						/>
 					</div>
 					<div class="font-bold mt-2">{{ president.player?.nickname }}</div>
-					<el-tag :type="getPositionTagType(1)" size="small" class="mt-1">
-						{{ getPositionName(1) }}
+					<el-tag type="danger" size="small" class="mt-1">
+						{{ president.position_config?.nickname || '会长' }}
 					</el-tag>
 				</div>
 
@@ -54,7 +54,7 @@
 				<el-collapse v-if="Object.keys(otherPositions).length > 0" v-model="activePositions">
 					<el-collapse-item v-for="(posMembers, positionLv) in otherPositions" :key="positionLv" :name="positionLv" >
 						<template #title>
-							<span class="font-bold">{{ getPositionName(Number(positionLv)) }} ({{ posMembers.length }}人)</span>
+							<span class="font-bold">{{ posMembers[0]?.position_config?.nickname || '成员' }} ({{ posMembers.length }}人)</span>
 						</template>
 						<div class="grid grid-cols-2 gap-3">
 							<div v-for="member in posMembers" :key="member.id" class="flex justify-between items-center px-2! border border-gray-200 rounded-lg ">
@@ -112,8 +112,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { MoreFilled } from '@element-plus/icons-vue'
 import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import {
-	getPositionName,
-	getPositionTagType,
 	getMemberPositionLv,
 	getMyPositionLv,
 	canPromoteMember,

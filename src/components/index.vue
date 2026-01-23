@@ -1,7 +1,7 @@
 <template>
 	<el-card class="min-h-screen w-full" :body-style="{ padding: 0 }">
 		<!-- 横幅图片 -->
-		<div class="h-48 flex items-center justify-center bg-center bg-cover",
+		<div class="h-48 flex items-center justify-center bg-center bg-cover"
 			 style="background-image:url('https://bird.cn-nb1.rains3.com/img/bg/bird_game_big.png');">
 		</div>
 
