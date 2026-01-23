@@ -2,6 +2,8 @@ import {reactive} from 'vue'
 import { canManageGuild } from '@/utils/guild-position'
 
 import game_config from './game_config.js'
+import game_config_special_items from './game_config_special_items.js'
+import game_config_guild_create from './game_config_guild_create.js'
 import game_title from "./game_title.js";
 import game_map from "./game_map.js";
 
@@ -60,6 +62,8 @@ class Game {
 		this.page = 'page_home'
 		this.player = new player();
 		this.game_config = new game_config();
+		this.game_config_special_items = new game_config_special_items();
+		this.game_config_guild_create = new game_config_guild_create();
 		this.game_title = new game_title();
 		this.game_map = new game_map();
 
@@ -128,10 +132,11 @@ class Game {
 	 * 在登录和重连时调用
 	 */
 	async refreshGameData() {
-		await game.game_avatar_frame.update()
+		await this.game_avatar_frame.update()
 		await this.player.update()
 		await this.player_friend.update()
 		await this.game_config.update()
+		await this.game_config_special_items.update()
 		await this.game_title.update()
 		await this.game_map.update()
 		await this.game_item_gift.update()

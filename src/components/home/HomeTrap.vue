@@ -173,10 +173,11 @@ const trapConfig = ref(null)
 const displayTraps = computed(() => {
 	if (!game.player_trap.data) return []
 
-	const traps = [...game.player_trap.data]
+	// 只显示未锁定的陷阱
+	const unlockedTraps = game.player_trap.data.filter(t => !t.is_locked)
 
 	// 在最后添加一个待解锁的占位符
-	traps.push({
+	unlockedTraps.push({
 		id: 'next_unlock',
 		nickname: '待解锁陷阱',
 		image_url: '',
@@ -184,7 +185,7 @@ const displayTraps = computed(() => {
 		is_placeholder: true
 	})
 
-	return traps
+	return unlockedTraps
 })
 
 const show_bait_list = async (trap) => {

@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { inject, ref, computed } from 'vue'
+import { inject, ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 
 const game = inject('game')
@@ -57,26 +57,20 @@ const formData = ref({
 
 const emit = defineEmits(['created'])
 
-// 从配置中获取创建价格和货币类型
+// 从工会创建配置中获取创建价格和货币类型
 const createPrice = computed(() => {
-	return game.game_config.get_value('guild', 'create_price') || 10000
+	return game.game_config_guild_create.get_create_price()
 })
 
-const priceType = computed(() => {
-	return game.game_config.get_value('guild', 'price_type') || 2
-})
-
-// 货币字段名映射
-const balanceField = computed(() => {
-	return `balance_${priceType.value}`
-})
-
-// 货币名称映射（从配置读取）
+// 货币名称
 const currencyName = computed(() => {
-	return game.game_config.get_value('game', 'balance_type')?.[priceType.value] || '金币'
+	return game.game_config_guild_create.data?.game_config_player_balance?.nickname || '金币'
 })
 
-const show = () => {
+const show = async () => {
+	// 加载工会创建配置
+	await game.game_config_guild_create.update()
+
 	vis.value = true
 	// 重置表单
 	formData.value = {
@@ -89,13 +83,6 @@ const handleSubmit = async () => {
 	// 验证工会名称
 	if (!formData.value.nickname || formData.value.nickname.trim().length < 2) {
 		ElMessage.error('工会名称至少需要2个字符')
-		return
-	}
-
-	// 检查余额
-	const currentBalance = game.player.data[balanceField.value] || 0
-	if (currentBalance < createPrice.value) {
-		ElMessage.error(`${currencyName.value}不足，创建工会需要${createPrice.value.toLocaleString()}${currencyName.value}`)
 		return
 	}
 
@@ -120,6 +107,11 @@ const handleSubmit = async () => {
 		loading.value = false
 	}
 }
+
+onMounted(async () => {
+	// 初始化时加载配置
+	await game.game_config_guild_create.update()
+})
 
 defineExpose({ show })
 </script>

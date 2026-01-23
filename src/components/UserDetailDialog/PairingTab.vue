@@ -200,13 +200,15 @@
 		</div>
 	</el-card>
 
-	<!-- 选择鸟对话框 -->
-	<BirdSelector
-			v-model="showBirdSelector"
-			:title="`选择配对的鸟（与 ${friendNest?.player_bird_1?.game_bird?.nickname} 配对）`"
-			:filter="birdFilter"
-			@select="handleBirdSelect"
-	/>
+  <!-- 选择鸟对话框 -->
+  <BirdSelector
+      v-model="showBirdSelector"
+      :title="`选择配对的鸟（与 ${friendNest?.player_bird_1?.game_bird?.nickname} 配对）`"
+      :filter-fields="['has_paired', 'status']"
+      :show-filtered-count="true"
+      @select="handleBirdSelect"
+  />
+
 </template>
 
 <script setup>

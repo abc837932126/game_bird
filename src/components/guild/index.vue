@@ -155,7 +155,7 @@
 </template>
 
 <script setup>
-import {inject, computed, ref, onMounted} from 'vue'
+import {inject, computed, ref, onMounted, onActivated} from 'vue'
 import {ElMessage, ElMessageBox, ElBadge} from 'element-plus'
 import { canManageGuild } from '@/utils/guild-position'
 import CreateGuildDialog from './CreateGuildDialog.vue'
@@ -208,6 +208,15 @@ const expPercentage = computed(() => {
 
 // 页面加载时刷新工会信息
 onMounted(async () => {
+  await game.guild.update()
+  // 如果未加入工会，加载工会列表
+  if (!game.guild.data) {
+    await loadGuildList()
+  }
+})
+
+// 每次激活时刷新工会信息
+onActivated(async () => {
   await game.guild.update()
   // 如果未加入工会，加载工会列表
   if (!game.guild.data) {

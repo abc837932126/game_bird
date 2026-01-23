@@ -100,7 +100,7 @@
 			</el-button>
 			<div class="flex items-center gap-2">
 				<el-checkbox v-model="use_fertility_pill" :disabled="!is_pairing_complete() || fertility_pill_count === 0">
-					使用多胎丸 ({{ fertility_pill_count }})
+					使用{{ game.game_config_special_items.data?.fertility_pill?.nickname || '多胎丸' }} ({{ fertility_pill_count }})
 				</el-checkbox>
 				<el-button size="small" type="danger" @click="harvest()" :disabled="!is_pairing_complete()">
 					收获幼鸟
@@ -113,6 +113,8 @@
 	<BirdSelector
 		v-model="vis_bird_list"
 		:title="`选择配对的鸟（位置${select_slot}）`"
+		:filter-fields="['has_paired', 'status']"
+		:show-filtered-count="true"
 		@select="set_bird"
 	/>
 
@@ -168,9 +170,12 @@ const use_fertility_pill = ref(false)
 // 计算多胎丸数量
 const fertility_pill_count = computed(() => {
 	if (!game.player_item_common.data) return 0
-	// 遍历所有通用道具，找到名称包含"多胎丸"的道具
+	// 从配置中获取多胎丸的ID
+	const fertilityPillId = game.game_config_special_items.data?.fertility_pill_id
+	if (!fertilityPillId) return 0
+	// 通过ID查找玩家的多胎丸道具
 	const fertilityPill = game.player_item_common.data.find(item =>
-		item.game_item_common?.nickname?.includes('多胎丸')
+		item.game_item_common_id === fertilityPillId
 	)
 	return fertilityPill ? fertilityPill.count : 0
 })
@@ -282,8 +287,9 @@ const harvest = async () => {
 		return
 	}
 	const birdsPerPlayer = res.data.birds_per_player || 1
+	const pillName = game.game_config_special_items.data?.fertility_pill?.nickname || '多胎丸'
 	const message = use_fertility_pill.value
-		? `收获成功！使用多胎丸，双方各获得${birdsPerPlayer}只幼鸟，获得经验: ${res.data.player_exp_gained}`
+		? `收获成功！使用${pillName}，双方各获得${birdsPerPlayer}只幼鸟，获得经验: ${res.data.player_exp_gained}`
 		: `收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`
 	ElMessage.success(message)
 	use_fertility_pill.value = false // 重置复选框

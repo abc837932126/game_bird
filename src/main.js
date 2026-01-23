@@ -7,6 +7,10 @@ import { game } from './game/index.js'
 import { checkVersion } from './utils/version-check.js'
 import { ElMessage } from 'element-plus'
 import { loadOSSConfig } from './config/oss.js'
+import VConsole from 'vconsole'
+
+// 初始化 vConsole（移动端调试工具）
+new VConsole()
 
 // 加载 OSS 配置
 loadOSSConfig()

@@ -1,5 +1,10 @@
 <template>
 	<el-dialog v-model="visible" :title="title" width="90%" append-to-body @close="handleClose">
+		<!-- 显示过滤信息 -->
+		<div v-if="showFilteredCount && filteredCount > 0" class="mb-3 text-sm text-gray-500 text-center">
+			已过滤 {{ filteredCount }} 只鸟
+		</div>
+
 		<div v-if="loading" class="text-center py-8 text-gray-400">
 			加载中...
 		</div>
@@ -28,6 +33,10 @@
 								<el-tag size="small">Lv.{{ bird.lv }}</el-tag>
 								<el-tag size="small" type="success">经验: {{ bird.exp }}</el-tag>
 								<el-tag size="small" type="warning">体重: {{ bird.weight?.toFixed(2) }}kg</el-tag>
+							</div>
+							<!-- 动态插槽：显示额外信息 -->
+							<div v-if="$slots['extra-info']" class="mt-1">
+								<slot name="extra-info" :bird="bird"></slot>
 							</div>
 							<el-tag v-if="bird.status" :type="bird.status === 'ladder' ? 'danger' : 'warning'" size="small" class="mt-1">
 								{{ bird.statusDetail }}
@@ -98,6 +107,16 @@ const props = defineProps({
 	autoLoad: {
 		type: Boolean,
 		default: true
+	},
+	// 是否显示过滤数量
+	showFilteredCount: {
+		type: Boolean,
+		default: false
+	},
+	// 要过滤的字段数组（字段值为 truthy 时过滤掉该鸟）
+	filterFields: {
+		type: Array,
+		default: () => []
 	}
 })
 
@@ -110,11 +129,27 @@ const visible = computed({
 
 const loading = ref(false)
 
+// 计算过滤掉的鸟数量
+const filteredCount = computed(() => {
+	if (!game.player_bird.data) return 0
+	const totalCount = game.player_bird.data.length
+	const visibleCount = filteredBirds.value.length
+	return totalCount - visibleCount
+})
+
 // 过滤后的鸟列表
 const filteredBirds = computed(() => {
 	if (!game.player_bird.data) return []
 
 	let birds = game.player_bird.data
+
+	// 根据字段数组过滤
+	if (props.filterFields.length > 0) {
+		birds = birds.filter(bird => {
+			// 如果任何指定字段为 truthy，则过滤掉该鸟
+			return !props.filterFields.some(field => bird[field])
+		})
+	}
 
 	// 排除指定 ID
 	if (props.excludeIds.length > 0) {
