@@ -118,7 +118,8 @@
 
 <script setup>
 import { ref, computed, inject, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 
@@ -154,7 +155,7 @@ const handleCreate = () => {
 
 const confirmCreate = async () => {
   if (!createForm.value.nickname) {
-    ElMessage.warning('请输入队伍名称')
+    message.warning('请输入队伍名称')
     return
   }
 
@@ -162,14 +163,14 @@ const confirmCreate = async () => {
   try {
     const res = await game.team.api.create_team(createForm.value)
     if (res.code === 200) {
-      ElMessage.success('队伍创建成功')
+      message.success('队伍创建成功')
       createDialogVisible.value = false
       await loadMyTeam()
     } else {
-      ElMessage.error(res.msg || '创建失败')
+      message.error(res.msg || '创建失败')
     }
   } catch (error) {
-    ElMessage.error('创建失败')
+    message.error('创建失败')
   } finally {
     creating.value = false
   }
@@ -183,7 +184,7 @@ const handleInvite = () => {
 
 const confirmInvite = async () => {
   if (!inviteForm.value.target_player_id) {
-    ElMessage.warning('请输入玩家ID')
+    message.warning('请输入玩家ID')
     return
   }
 
@@ -194,14 +195,14 @@ const confirmInvite = async () => {
       target_player_id: inviteForm.value.target_player_id
     })
     if (res.code === 200) {
-      ElMessage.success('邀请成功')
+      message.success('邀请成功')
       inviteDialogVisible.value = false
       await loadMyTeam()
     } else {
-      ElMessage.error(res.msg || '邀请失败')
+      message.error(res.msg || '邀请失败')
     }
   } catch (error) {
-    ElMessage.error('邀请失败')
+    message.error('邀请失败')
   } finally {
     inviting.value = false
   }
@@ -209,7 +210,7 @@ const confirmInvite = async () => {
 
 // 发起战斗
 const handleBattle = () => {
-  ElMessage.info('战斗功能开发中...')
+  message.info('战斗功能开发中...')
 }
 
 // 离开队伍
@@ -229,10 +230,10 @@ const handleLeave = async () => {
       team_id: myTeam.value.id
     })
     if (res.code === 200) {
-      ElMessage.success(res.msg)
+      message.success(res.msg)
       await loadMyTeam()
     } else {
-      ElMessage.error(res.msg || '操作失败')
+      message.error(res.msg || '操作失败')
     }
   } catch (error) {
     // 用户取消

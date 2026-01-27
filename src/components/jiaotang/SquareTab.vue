@@ -146,7 +146,8 @@
 
 <script setup>
 import { ref, inject, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
+import { message } from '@/game/notification-center'
 import WeddingCard from './WeddingCard.vue'
 import BlessingDialog from './BlessingDialog.vue'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
@@ -187,7 +188,8 @@ const activeWeddings = computed(() => {
 		weddingTime: new Date(parseInt(wedding.wedding_time) * 1000).toISOString(),
 		blessCount: wedding.blessCount || 0,
 		gift_money: wedding.gift_money || 0,
-		gift_money_left: wedding.gift_money_left || 0
+		gift_money_left: wedding.gift_money_left || 0,
+		currency_name: wedding.marriage_item?.currency?.nickname || '金币'
 	}))
 })
 
@@ -212,14 +214,14 @@ const handleAccept = async (proposalId) => {
 	try {
 		const res = await game.player_marriage.api.accept(proposalId)
 		if (res.code === 200) {
-			ElMessage.success('你同意了求婚！')
+			message.success('你同意了求婚！')
 			// 刷新数据
 			await game.player_marriage.update()
 		} else {
-			ElMessage.error(res.msg || '操作失败')
+			message.error(res.msg || '操作失败')
 		}
 	} catch (error) {
-		ElMessage.error('操作失败，请稍后再试')
+		message.error('操作失败，请稍后再试')
 	}
 }
 
@@ -234,15 +236,15 @@ const handleReject = async (proposalId) => {
 
 		const res = await game.player_marriage.api.reject(proposalId)
 		if (res.code === 200) {
-			ElMessage.success('已拒绝求婚')
+			message.success('已拒绝求婚')
 			// 刷新数据
 			await game.player_marriage.update()
 		} else {
-			ElMessage.error(res.msg || '操作失败')
+			message.error(res.msg || '操作失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('操作失败，请稍后再试')
+			message.error('操作失败，请稍后再试')
 		}
 	}
 }
@@ -258,15 +260,15 @@ const handleCancel = async (proposalId) => {
 
 		const res = await game.player_marriage.api.cancel(proposalId)
 		if (res.code === 200) {
-			ElMessage.success('已取消求婚')
+			message.success('已取消求婚')
 			// 刷新数据
 			await game.player_marriage.update()
 		} else {
-			ElMessage.error(res.msg || '操作失败')
+			message.error(res.msg || '操作失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('操作失败，请稍后再试')
+			message.error('操作失败，请稍后再试')
 		}
 	}
 }
@@ -274,30 +276,97 @@ const handleCancel = async (proposalId) => {
 // 开始婚礼
 const handleStartWedding = async (proposalId) => {
 	try {
-		// 使用 ElMessageBox.prompt 获取礼金金额
-		const { value: giftMoney } = await ElMessageBox.prompt('请输入婚礼礼金金额（前10位送祝福的玩家将随机获得礼金）', '开始婚礼', {
+		// 获取婚礼道具列表
+		const marriageItemsRes = await game.game_config_marriage.api.getAll()
+		if (marriageItemsRes.code !== 200 || !marriageItemsRes.data || marriageItemsRes.data.length === 0) {
+			message.error('暂无可用的婚礼道具')
+			return
+		}
+
+		const marriageItems = marriageItemsRes.data
+
+		// 构建选项HTML
+		const optionsHtml = marriageItems.map(item => {
+			const currencyName = item.currency?.nickname || '未知货币'
+			return `
+				<div style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px; cursor: pointer;"
+					 data-item-id="${item.id}"
+					 class="marriage-item-option">
+					<div style="font-weight: bold; font-size: 14px;">${item.nickname}</div>
+					<div style="color: #666; font-size: 12px; margin-top: 4px;">${item.desc}</div>
+					<div style="color: #f56c6c; font-size: 13px; margin-top: 4px;">价格: ${item.price} ${currencyName}</div>
+					<div style="color: #67c23a; font-size: 12px; margin-top: 2px;">礼金: ${item.price} ${currencyName}</div>
+				</div>
+			`
+		}).join('')
+
+		// 使用 ElMessageBox 显示选择对话框（不使用 await）
+		ElMessageBox({
+			title: '选择婚礼道具',
+			message: `
+				<div style="max-height: 400px; overflow-y: auto;">
+					<div style="margin-bottom: 10px; color: #909399; font-size: 13px;">
+						选择婚礼道具后，将扣除道具价格，道具价格即为婚礼礼金
+					</div>
+					${optionsHtml}
+				</div>
+			`,
+			dangerouslyUseHTMLString: true,
+			showCancelButton: true,
 			confirmButtonText: '开始婚礼',
 			cancelButtonText: '取消',
-			inputPattern: /^\d+$/,
-			inputErrorMessage: '请输入有效的金额',
-			inputPlaceholder: '输入礼金金额（可选，输入0表示不设置礼金）',
-			inputValue: '0'
+			beforeClose: async (action, instance, done) => {
+				if (action === 'confirm') {
+					const selected = document.querySelector('.marriage-item-option.selected')
+					if (!selected) {
+						message.warning('请选择一个婚礼道具')
+						return
+					}
+
+					const selectedItemId = selected.getAttribute('data-item-id')
+					instance.confirmButtonLoading = true
+
+					try {
+						const res = await game.player_marriage.api.startWedding(proposalId, parseInt(selectedItemId))
+						if (res.code === 200) {
+							message.success('婚礼开始！恭喜你们喜结连理 🎉')
+							// 刷新数据
+							await game.player_marriage.update()
+							await game.game_marriage.update()
+							done()
+						} else {
+							message.error(res.msg || '操作失败')
+							instance.confirmButtonLoading = false
+						}
+					} catch (error) {
+						message.error('操作失败，请稍后再试')
+						instance.confirmButtonLoading = false
+					}
+				} else {
+					done()
+				}
+			}
 		})
 
-		const amount = parseInt(giftMoney) || 0
-
-		const res = await game.player_marriage.api.startWedding(proposalId, amount)
-		if (res.code === 200) {
-			ElMessage.success('婚礼开始！恭喜你们喜结连理 🎉')
-			// 刷新数据
-			await game.player_marriage.update()
-			await game.game_marriage.update()
-		} else {
-			ElMessage.error(res.msg || '操作失败')
-		}
+		// 添加点击事件监听（在对话框打开后立即执行）
+		setTimeout(() => {
+			const options = document.querySelectorAll('.marriage-item-option')
+			options.forEach(option => {
+				option.addEventListener('click', function() {
+					options.forEach(opt => {
+						opt.classList.remove('selected')
+						opt.style.borderColor = '#ddd'
+						opt.style.backgroundColor = 'white'
+					})
+					this.classList.add('selected')
+					this.style.borderColor = '#409eff'
+					this.style.backgroundColor = '#ecf5ff'
+				})
+			})
+		}, 100)
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('操作失败，请稍后再试')
+			console.error('开始婚礼失败:', error)
 		}
 	}
 }
@@ -324,16 +393,16 @@ const handleDivorce = async () => {
 
 		const res = await game.player_marriage.api.divorce()
 		if (res.code === 200) {
-			ElMessage.success('离婚成功')
+			message.success('离婚成功')
 			// 刷新数据
 			await game.player_marriage.update()
 			await game.game_marriage.update()
 		} else {
-			ElMessage.error(res.msg || '离婚失败')
+			message.error(res.msg || '离婚失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('操作失败，请稍后再试')
+			message.error('操作失败，请稍后再试')
 		}
 	}
 }

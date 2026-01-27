@@ -29,7 +29,7 @@
 							<el-input-number v-model="depositForm.amount" :min="1" />
 						</el-form-item>
 						<el-form-item>
-							<el-button type="primary" @click="handleDeposit">存款 (手续费1%)</el-button>
+							<el-button type="primary" @click="handleDeposit">存款 (手续费{{ bankData.deposit_fee_rate || 1 }}%)</el-button>
 						</el-form-item>
 					</el-form>
 				</el-tab-pane>
@@ -54,7 +54,7 @@
 
 		<el-card class="upgrade-card">
 			<div class="upgrade-info">
-				<div>提升额度: 花费 {{ bankData.upgrade_cost || 100 }} 元宝提升 {{ (bankData.upgrade_rate || 0.1) * 100 }}% 额度</div>
+				<div>提升额度: 花费 {{ bankData.upgrade_cost || 100 }} {{ bankData.upgrade_balance?.nickname || '元宝' }} 提升 {{ bankData.upgrade_rate || 10 }}% 额度</div>
 				<el-button type="warning" @click="handleUpgrade">提升额度</el-button>
 			</div>
 		</el-card>
@@ -63,7 +63,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { game } from '../../game'
 
 const activeTab = ref('deposit')
@@ -73,7 +73,8 @@ const withdrawForm = ref({ currency_type: 1, amount: 100 })
 const bankData = computed(() => game.bank.data || {})
 
 const allowedCurrencyTypes = computed(() => {
-	return bankData.value.allowed_currency_types || [1]
+	if (!bankData.value.allowed_currencies) return [1]
+	return bankData.value.allowed_currencies.map(c => c.balance_id)
 })
 
 const usagePercent = computed(() => {
@@ -89,31 +90,34 @@ const progressColor = computed(() => {
 })
 
 function getCurrencyName(type) {
-	const balanceTypes = game.game_config?.data?.game?.balance_type || {}
-	return balanceTypes[type] || '未知'
+	// 从玩家余额中查找对应的货币名称
+	const balance = game.player?.data?.player_balance?.find(b => b.game_config_player_balance_id === type)
+	return balance?.game_config_player_balance?.nickname || '未知'
 }
 
 function getBankBalance(type) {
-	const balanceField = `bank_balance_${type}`
-	return bankData.value[balanceField] || 0
+	// 从银行余额数组中查找
+	const bankBalance = bankData.value.player_bank_balance?.find(b => b.balance_id === type)
+	return bankBalance?.count || 0
 }
 
 function getWalletBalance(type) {
-	const balanceField = `balance_${type}`
-	return game.player?.data?.[balanceField] || 0
+	// 从玩家余额数组中查找
+	const balance = game.player?.data?.player_balance?.find(b => b.game_config_player_balance_id === type)
+	return balance?.count || 0
 }
 
 async function handleDeposit() {
 	try {
 		const res = await game.bank.deposit(depositForm.value.currency_type, depositForm.value.amount)
 		if (res.code === 200) {
-			ElMessage.success('存款成功')
+			message.success('存款成功')
 			await game.player.update()
 		} else {
-			ElMessage.error(res.message || '存款失败')
+			message.error(res.message || '存款失败')
 		}
 	} catch (error) {
-		ElMessage.error('存款失败')
+		message.error('存款失败')
 	}
 }
 
@@ -121,13 +125,13 @@ async function handleWithdraw() {
 	try {
 		const res = await game.bank.withdraw(withdrawForm.value.currency_type, withdrawForm.value.amount)
 		if (res.code === 200) {
-			ElMessage.success('取款成功')
+			message.success('取款成功')
 			await game.player.update()
 		} else {
-			ElMessage.error(res.message || '取款失败')
+			message.error(res.message || '取款失败')
 		}
 	} catch (error) {
-		ElMessage.error('取款失败')
+		message.error('取款失败')
 	}
 }
 
@@ -135,14 +139,14 @@ async function handleUpgrade() {
 	try {
 		const res = await game.bank.upgradeLimit()
 		if (res.code === 200) {
-			ElMessage.success('额度提升成功')
+			message.success('额度提升成功')
 			await game.player.update()
 			await game.bank.update()
 		} else {
-			ElMessage.error(res.message || '额度提升失败')
+			message.error(res.message || '额度提升失败')
 		}
 	} catch (error) {
-		ElMessage.error('额度提升失败')
+		message.error('额度提升失败')
 	}
 }
 

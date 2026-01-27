@@ -4,25 +4,7 @@
  */
 export const OSS_CONFIG = {
   // OSS 公开访问域名（从后端获取）
-  BASE_URL: '',
-}
-
-/**
- * 从后端获取 OSS 配置
- */
-export async function loadOSSConfig() {
-  try {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000';
-    const response = await fetch(`${API_URL}/api/oss/config`);
-    const result = await response.json();
-    if (result.code === 200 && result.data) {
-      OSS_CONFIG.BASE_URL = result.data.baseUrl;
-    }
-  } catch (error) {
-    console.error('加载 OSS 配置失败:', error);
-    // 使用默认值
-    OSS_CONFIG.BASE_URL = 'https://bird.cn-nb1.rains3.com';
-  }
+  BASE_URL: 'https://bird.cn-nb1.rains3.com',
 }
 
 /**

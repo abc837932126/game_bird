@@ -110,7 +110,8 @@
 
 <script setup>
 import { inject, ref, computed, watch, onUnmounted } from "vue"
-import { ElButton, ElDialog, ElMessage, ElIcon, ElCard, ElTag, ElInputNumber } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElCard, ElTag, ElInputNumber } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
@@ -173,7 +174,7 @@ const useExpCard = async (bird) => {
 
 	// 验证数量
 	if (useCount.value < 1 || useCount.value > (currentItem.value.count || 0)) {
-		ElMessage.error('使用数量无效')
+		message.error('使用数量无效')
 		return
 	}
 
@@ -185,7 +186,7 @@ const useExpCard = async (bird) => {
 		)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '使用成功')
+			message.success(response.data.message || '使用成功')
 			// 更新经验卡数据
 			await game.player_item_bird_exp.update()
 			// 关闭对话框
@@ -198,10 +199,10 @@ const useExpCard = async (bird) => {
 				currentItem.value = null
 			}
 		} else {
-			ElMessage.error(response.message || '使用失败')
+			message.error(response.message || '使用失败')
 		}
 	} catch (error) {
-		ElMessage.error('使用失败: ' + error.message)
+		message.error('使用失败: ' + error.message)
 	}
 }
 

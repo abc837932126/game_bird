@@ -46,7 +46,7 @@
 
 <script setup>
 import { inject, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -63,7 +63,7 @@ const loadInvites = async () => {
 	if (res.code === 200) {
 		invites.value = res.data
 	} else {
-		ElMessage.error(res.msg || '加载邀请列表失败')
+		message.error(res.msg || '加载邀请列表失败')
 	}
 }
 
@@ -72,15 +72,15 @@ const handleAccept = async (invite) => {
 	try {
 		const res = await game.guild_invite.api.accept({ invite_id: invite.id })
 		if (res.code === 200) {
-			ElMessage.success('已加入工会')
+			message.success('已加入工会')
 			await game.guild.update()
 			await loadInvites()
 		} else {
-			ElMessage.error(res.msg || '接受邀请失败')
+			message.error(res.msg || '接受邀请失败')
 		}
 	} catch (error) {
 		console.error('接受邀请失败:', error)
-		ElMessage.error('接受邀请失败')
+		message.error('接受邀请失败')
 	} finally {
 		processingId.value = null
 	}
@@ -91,14 +91,14 @@ const handleReject = async (invite) => {
 	try {
 		const res = await game.guild_invite.api.reject({ invite_id: invite.id })
 		if (res.code === 200) {
-			ElMessage.success('已拒绝邀请')
+			message.success('已拒绝邀请')
 			await loadInvites()
 		} else {
-			ElMessage.error(res.msg || '拒绝邀请失败')
+			message.error(res.msg || '拒绝邀请失败')
 		}
 	} catch (error) {
 		console.error('拒绝邀请失败:', error)
-		ElMessage.error('拒绝邀请失败')
+		message.error('拒绝邀请失败')
 	} finally {
 		processingId.value = null
 	}

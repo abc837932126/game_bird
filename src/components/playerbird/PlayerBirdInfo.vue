@@ -1,5 +1,5 @@
 <template>
-	<el-dialog v-model="vis" class="p-0!" width="90%" :show-close="false" header-class="p-0!" center>
+	<el-dialog v-model="vis" class="p-0!" width="90%" align-center :show-close="false" header-class="p-0!" center>
 		<!-- 鸟类大图 -->
 		<el-image :src="getImageUrl('bird', bird?.game_bird?.nickname)" fit="cover" loading="lazy" class="max-h-64 w-full">
 			<template #placeholder>
@@ -36,7 +36,7 @@
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">经验:</span>
-					<span class="font-bold text-green-600">{{ bird?.exp || 0 }}</span>
+					<span class="font-bold text-green-600">{{ bird?.exp || 0 }}/{{ bird?.game_bird?.up_exp || 0 }}</span>
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">性别:</span>
@@ -44,7 +44,7 @@
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">类型:</span>
-					<span class="font-bold text-blue-600">{{ getBirdTypeName(bird?.game_bird?.type) }}</span>
+					<span class="font-bold text-blue-600">{{ bird?.game_bird?.game_config_bird_type?.nickname || '未知' }}</span>
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">体重:</span>
@@ -66,7 +66,7 @@
 					<span class="text-gray-600">价格:</span>
 					<span class="font-bold text-yellow-600">
 						{{ bird?.game_bird?.price || 0 }}
-						{{ game.game_config.get_value('game', 'balance_type')?.[bird?.game_bird?.price_type] }}
+						{{ bird?.game_bird?.game_config_player_balance?.nickname || '金币' }}
 					</span>
 				</div>
 			</div>
@@ -94,22 +94,42 @@
 				</div>
 			</div>
 
-			<!-- 按钮 -->
-			<div class="flex flex-wrap justify-between gap-2 mt-2">
-				<el-button type="primary" @click="vis = false">关闭</el-button>
-				<div class="flex flex-wrap gap-2">
-					<el-button type="info" @click="showExpCardSelection">使用经验卡</el-button>
-					<el-button type="success" @click="handleSell" :disabled="!!bird?.status">
-						{{ bird?.status ? '无法出售' : '出售' }}
-					</el-button>
-					<el-button
-						type="danger"
-						@click="handleReincarnate"
-						:disabled="(bird?.lv || 1) < 100"
+			<!-- 高级技能 -->
+			<div class="p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded">
+				<div class="text-sm font-bold mb-2">高级技能</div>
+				<div v-if="birdSkills.length > 0" class="flex flex-wrap gap-2">
+					<el-tag
+						v-for="skill in birdSkills"
+						:key="skill.id"
+						:type="skill.is_equipped ? 'success' : 'info'"
+						size="small"
 					>
-						{{ bird?.lv >= 100 ? '转生' : `转生(${bird?.lv || 1}/100)` }}
-					</el-button>
+						{{ skill.game_skill?.nickname || '未知技能' }}
+						<span v-if="skill.is_equipped"> ✓</span>
+					</el-tag>
 				</div>
+				<div v-else class="text-sm text-gray-400">
+					暂无技能
+				</div>
+			</div>
+
+			<!-- 按钮 -->
+			<div class="grid grid-cols-2 gap-2 mt-2">
+				<el-button class="m-0!" type="info" @click="showExpCardSelection">使用经验卡</el-button>
+				<el-button class="m-0!" type="warning" @click="handleUseGrowthPotion">洗练成长</el-button>
+				<el-button class="m-0!" type="primary" @click="handleUseStabilizer">使用{{ game.game_config_special_items.data?.stabilizer?.nickname || '稳定剂' }}({{ stabilizerCount }})</el-button>
+				<el-button class="m-0!" type="success" @click="handleSell" :disabled="!!bird?.status">
+					{{ bird?.status ? '无法出售' : '出售' }}
+				</el-button>
+				<el-button
+					type="danger"
+          class="m-0!"
+					@click="handleReincarnate"
+					:disabled="(bird?.lv || 1) < 100"
+				>
+					{{ bird?.lv >= 100 ? '转生' : `转生(${bird?.lv || 1}/100)` }}
+				</el-button>
+				<el-button type="primary" @click="vis = false" class="m-0!">关闭</el-button>
 			</div>
 		</div>
 	</el-dialog>
@@ -178,10 +198,11 @@
 </template>
 
 <script setup>
-import { ElButton, ElDialog, ElIcon, ElTag, ElMessage, ElCard, ElInputNumber, ElMessageBox } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElTag, ElCard, ElInputNumber, ElMessageBox } from "element-plus"
 import { ref, inject, computed } from "vue"
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -190,15 +211,28 @@ const expCardSelectionVisible = ref(false)
 const selectedExpCard = ref(null)
 const useCount = ref(1)
 
+// 计算当前鸟的技能列表
+const birdSkills = computed(() => {
+	if (!bird.value?.player_bird_skill) return []
+	return bird.value.player_bird_skill
+})
+
+// 计算稳定剂数量
+const stabilizerCount = computed(() => {
+	if (!game.player_item_common.data) return 0
+	// 从配置中获取稳定剂的ID
+	const stabilizerId = game.game_config_special_items.data?.stabilizer_id
+	if (!stabilizerId) return 0
+	// 通过ID查找玩家的稳定剂道具
+	const stabilizer = game.player_item_common.data.find(item =>
+		item.game_item_common_id === stabilizerId
+	)
+	return stabilizer ? stabilizer.count : 0
+})
+
 const show = (birdData) => {
 	bird.value = birdData
 	vis.value = true
-}
-
-// 获取鸟类型名称
-const getBirdTypeName = (typeId) => {
-	const birdTypes = game.game_config.get_value('game_bird', 'type')
-	return birdTypes?.[typeId] || '未知'
 }
 
 // 经验卡列表
@@ -228,7 +262,7 @@ const confirmUseExpCard = async () => {
 
 	// 验证数量
 	if (useCount.value < 1 || useCount.value > (selectedExpCard.value.count || 0)) {
-		ElMessage.error('使用数量无效')
+		message.error('使用数量无效')
 		return
 	}
 
@@ -240,7 +274,7 @@ const confirmUseExpCard = async () => {
 		)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '使用成功')
+			message.success(response.data.message || '使用成功')
 			// 更新经验卡数据
 			await game.player_item_bird_exp.update()
 			// 更新当前显示的鸟数据
@@ -252,10 +286,10 @@ const confirmUseExpCard = async () => {
 			expCardSelectionVisible.value = false
 			selectedExpCard.value = null
 		} else {
-			ElMessage.error(response.message || '使用失败')
+			message.error(response.message || '使用失败')
 		}
 	} catch (error) {
-		ElMessage.error('使用失败: ' + error.message)
+		message.error('使用失败: ' + error.message)
 	}
 }
 
@@ -265,21 +299,21 @@ const handleSell = async () => {
 
 	// 检查是否正在使用中
 	if (bird.value.status) {
-		ElMessage.warning(bird.value.statusDetail || '该鸟正在使用中，无法出售')
+		message.warning(bird.value.statusDetail || '该鸟正在使用中，无法出售')
 		return
 	}
 
 	// 检查是否可以出售
 	const basePrice = bird.value.game_bird.price || 0
 	if (basePrice === 0) {
-		ElMessage.error('该鸟无法出售')
+		message.error('该鸟无法出售')
 		return
 	}
 
 	// 计算预估价格用于确认对话框（基础价格 × 体重，不足1斤按1斤算）
 	const weight = Math.max(1, Math.floor(bird.value.weight || 0))
 	const estimatedPrice = basePrice * weight
-	const currencyType = game.game_config.get_value('game', 'balance_type')?.[bird.value.game_bird.price_type] || '金币'
+	const currencyType = bird.value.game_bird.game_config_player_balance?.nickname || '金币'
 
 	try {
 		// 确认对话框
@@ -294,21 +328,21 @@ const handleSell = async () => {
 		)
 
 		// 调用出售接口
-		const response = await game.player_bird.sell(bird.value.id)
+		const response = await game.player_bird.sell({ player_bird_id: bird.value.id })
 
 		if (response.code === 200) {
 			// 显示实际获得的金币数（从后端返回）
-			ElMessage.success(response.data.message || '出售成功')
+			message.success(response.data.message || '出售成功')
 			// 更新玩家信息（刷新金币）
 			await game.player.update()
 			// 关闭对话框
 			vis.value = false
 		} else {
-			ElMessage.error(response.msg || '出售失败')
+			message.error(response.msg || '出售失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('出售失败: ' + (error.message || error))
+			message.error('出售失败: ' + (error.message || error))
 		}
 	}
 }
@@ -318,7 +352,7 @@ const handleReincarnate = async () => {
 	if (!bird.value) return
 
 	if ((bird.value.lv || 1) < 100) {
-		ElMessage.warning('该鸟未达到100级，无法转生')
+		message.warning('该鸟未达到100级，无法转生')
 		return
 	}
 
@@ -336,17 +370,92 @@ const handleReincarnate = async () => {
 		const response = await game.player_bird.reincarnate(bird.value.id)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '转生成功')
+			message.success(response.data.message || '转生成功')
 			const updatedBird = game.player_bird.data.find(b => b.id === bird.value.id)
 			if (updatedBird) {
 				bird.value = updatedBird
 			}
 		} else {
-			ElMessage.error(response.msg || '转生失败')
+			message.error(response.msg || '转生失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('转生失败: ' + (error.message || error))
+			message.error('转生失败: ' + (error.message || error))
+		}
+	}
+}
+
+// 使用成长药水
+const handleUseGrowthPotion = async () => {
+	if (!bird.value) return
+
+	try {
+		await ElMessageBox.confirm(
+			`确定要使用成长药水洗练 ${bird.value.game_bird.nickname} 的成长值吗？\n\n当前成长值: ${bird.value.grow.toFixed(2)}\n\n洗练后将随机获得 0.1-5.0 之间的成长值`,
+			'洗练确认',
+			{
+				confirmButtonText: '确认洗练',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		)
+
+		const response = await game.player_bird.useGrowthPotion(bird.value.id)
+
+		if (response.code === 200) {
+			message.success(response.data.message || '洗练成功')
+			// 更新玩家道具数据
+			await game.player_item_common.update()
+			// 更新当前显示的鸟数据
+			const updatedBird = game.player_bird.data.find(b => b.id === bird.value.id)
+			if (updatedBird) {
+				bird.value = updatedBird
+			}
+		} else {
+			message.error(response.msg || '洗练失败')
+		}
+	} catch (error) {
+		if (error !== 'cancel') {
+			message.error('洗练失败: ' + (error.message || error))
+		}
+	}
+}
+
+// 使用稳定剂
+const handleUseStabilizer = async () => {
+	if (!bird.value) return
+
+	const stabilizerName = game.game_config_special_items.data?.stabilizer?.nickname || '稳定剂'
+	const stabilizerDesc = game.game_config_special_items.data?.stabilizer?.desc || '随机获得一个高级技能'
+
+	try {
+		await ElMessageBox.confirm(
+			`确定要使用${stabilizerName}吗？\n\n${stabilizerName}的作用：${stabilizerDesc}`,
+			'使用确认',
+			{
+				confirmButtonText: '确认使用',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		)
+
+		const response = await game.player_bird.useStabilizer(bird.value.id)
+
+		if (response.code === 200) {
+			message.success(response.data.message || '使用成功')
+			// 更新玩家道具数据
+			await game.player_item_common.update()
+			// 更新当前显示的鸟数据
+			const updatedBird = game.player_bird.data.find(b => b.id === bird.value.id)
+			if (updatedBird) {
+				bird.value = updatedBird
+			}
+		} else {
+			message.error(response.msg || '使用失败')
+		}
+	} catch (error) {
+		if (error !== 'cancel') {
+			message.error('使用失败: ' + (error.message || error))
 		}
 	}
 }

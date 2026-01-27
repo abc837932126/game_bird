@@ -1,8 +1,8 @@
 import { request } from './config'
 
 class api {
-	daily_checkin = () => request('player', 'daily_checkin')
-	checkin_info = () => request('player', 'checkin_info')
+	daily_checkin = () => request('player_checkin', 'daily_checkin')
+	checkin_info = () => request('player_checkin', 'checkin_info')
 }
 
 export default class checkin {

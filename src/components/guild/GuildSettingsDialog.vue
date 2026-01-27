@@ -47,7 +47,8 @@
 
 <script setup>
 import { inject, ref, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { isLeader, getMyPositionLv } from '@/utils/guild-position'
 
 const game = inject('game')
@@ -82,7 +83,7 @@ const handleSave = async () => {
 		})
 
 		if (descRes.code !== 200) {
-			ElMessage.error(descRes.msg || '更新描述失败')
+			message.error(descRes.msg || '更新描述失败')
 			return
 		}
 
@@ -92,16 +93,16 @@ const handleSave = async () => {
 		})
 
 		if (announcementRes.code !== 200) {
-			ElMessage.error(announcementRes.msg || '更新公告失败')
+			message.error(announcementRes.msg || '更新公告失败')
 			return
 		}
 
-		ElMessage.success('设置已保存')
+		message.success('设置已保存')
 		await game.guild.update()
 		vis.value = false
 	} catch (error) {
 		console.error('保存设置失败:', error)
-		ElMessage.error('保存设置失败')
+		message.error('保存设置失败')
 	} finally {
 		loading.value = false
 	}
@@ -121,11 +122,11 @@ const handleDisband = async () => {
 
 		const res = await game.guild.api.disband({ guild_id: game.guild.data.id })
 		if (res.code === 200) {
-			ElMessage.success('工会已解散')
+			message.success('工会已解散')
 			await game.guild.update()
 			vis.value = false
 		} else {
-			ElMessage.error(res.msg || '解散工会失败')
+			message.error(res.msg || '解散工会失败')
 		}
 	} catch (error) {
 		// 用户取消

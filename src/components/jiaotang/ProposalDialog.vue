@@ -136,7 +136,7 @@
 
 <script setup>
 import { ref, inject, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 
 const game = inject('game')
@@ -207,18 +207,18 @@ const show = () => {
 // 提交邀请
 const handleSubmit = async () => {
 	if (!selectedFriend.value) {
-		ElMessage.warning('请选择结婚对象')
+		message.warning('请选择结婚对象')
 		return
 	}
 
 	if (!selectedItem.value) {
-		ElMessage.warning('请选择结婚道具')
+		message.warning('请选择结婚道具')
 		return
 	}
 
 	// 检查亲密度是否满足要求
 	if (selectedFriend.value.intimacy < selectedItem.value.need_heart) {
-		ElMessage.warning(`亲密度不足！需要${selectedItem.value.need_heart}点，当前${selectedFriend.value.intimacy}点`)
+		message.warning(`亲密度不足！需要${selectedItem.value.need_heart}点，当前${selectedFriend.value.intimacy}点`)
 		return
 	}
 
@@ -230,16 +230,16 @@ const handleSubmit = async () => {
 		)
 
 		if (res.code === 200) {
-			ElMessage.success(`已向 ${selectedFriend.value.nickname} 发送结婚邀请！`)
+			message.success(`已向 ${selectedFriend.value.nickname} 发送结婚邀请！`)
 			// 刷新数据
 			await game.player_item_ring.update()
 			vis.value = false
 			emit('success')
 		} else {
-			ElMessage.error(res.msg || '发送邀请失败')
+			message.error(res.msg || '发送邀请失败')
 		}
 	} catch (error) {
-		ElMessage.error('发送邀请失败，请稍后再试')
+		message.error('发送邀请失败，请稍后再试')
 	}
 }
 

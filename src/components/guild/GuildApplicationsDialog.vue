@@ -75,7 +75,7 @@
 
 <script setup>
 import { inject, ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -108,7 +108,7 @@ const loadApplications = async () => {
 	if (res.code === 200) {
 		applications.value = res.data
 	} else {
-		ElMessage.error(res.msg || '加载申请列表失败')
+		message.error(res.msg || '加载申请列表失败')
 	}
 }
 
@@ -117,7 +117,7 @@ const handleAccept = async (app) => {
 	try {
 		const res = await game.guild_application.api.accept({ application_id: app.id })
 		if (res.code === 200) {
-			ElMessage.success('已同意申请')
+			message.success('已同意申请')
 			await game.guild.update()
 			await loadApplications()
 			// 刷新待处理申请数量
@@ -125,11 +125,11 @@ const handleAccept = async (app) => {
 				await game.guild_application.updateGuildApplications(game.guild.data.id)
 			}
 		} else {
-			ElMessage.error(res.msg || '同意申请失败')
+			message.error(res.msg || '同意申请失败')
 		}
 	} catch (error) {
 		console.error('同意申请失败:', error)
-		ElMessage.error('同意申请失败')
+		message.error('同意申请失败')
 	} finally {
 		processingId.value = null
 	}
@@ -140,18 +140,18 @@ const handleReject = async (app) => {
 	try {
 		const res = await game.guild_application.api.reject({ application_id: app.id })
 		if (res.code === 200) {
-			ElMessage.success('已拒绝申请')
+			message.success('已拒绝申请')
 			await loadApplications()
 			// 刷新待处理申请数量
 			if (game.guild.data?.id) {
 				await game.guild_application.updateGuildApplications(game.guild.data.id)
 			}
 		} else {
-			ElMessage.error(res.msg || '拒绝申请失败')
+			message.error(res.msg || '拒绝申请失败')
 		}
 	} catch (error) {
 		console.error('拒绝申请失败:', error)
-		ElMessage.error('拒绝申请失败')
+		message.error('拒绝申请失败')
 	} finally {
 		processingId.value = null
 	}
@@ -162,14 +162,14 @@ const handleCancel = async (app) => {
 	try {
 		const res = await game.guild_application.api.cancel({ application_id: app.id })
 		if (res.code === 200) {
-			ElMessage.success('已取消申请')
+			message.success('已取消申请')
 			await loadApplications()
 		} else {
-			ElMessage.error(res.msg || '取消申请失败')
+			message.error(res.msg || '取消申请失败')
 		}
 	} catch (error) {
 		console.error('取消申请失败:', error)
-		ElMessage.error('取消申请失败')
+		message.error('取消申请失败')
 	} finally {
 		processingId.value = null
 	}

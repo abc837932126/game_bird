@@ -72,20 +72,17 @@
 			<div class="mb-4 pb-4 border-b">
 				<div class="text-sm font-bold text-gray-700 mb-3">💰 财富资产</div>
 				<div class="grid grid-cols-3 gap-3">
-					<div class="text-center bg-yellow-50 rounded p-2">
-						<div class="text-2xl mb-1">💰</div>
-						<div class="text-lg font-bold text-yellow-600">{{ game.player.data?.balance_1 || 0 }}</div>
-						<div class="text-xs text-gray-500">{{ get_balance_label('balance_1') }}</div>
-					</div>
-					<div class="text-center bg-blue-50 rounded p-2">
-						<div class="text-2xl mb-1">💎</div>
-						<div class="text-lg font-bold text-blue-600">{{ game.player.data?.balance_2 || 0 }}</div>
-						<div class="text-xs text-gray-500">{{ get_balance_label('balance_2') }}</div>
-					</div>
-					<div class="text-center bg-purple-50 rounded p-2">
-						<div class="text-2xl mb-1">🪙</div>
-						<div class="text-lg font-bold text-purple-600">{{ game.player.data?.balance_3 || 0 }}</div>
-						<div class="text-xs text-gray-500">{{ get_balance_label('balance_3') }}</div>
+					<div
+						v-for="balance in game.player.data?.player_balance || []"
+						:key="balance.id"
+						class="text-center rounded p-2"
+						:class="getBalanceBgClass(balance.balance_id)"
+					>
+						<div class="text-2xl mb-1">{{ getBalanceEmoji(balance.balance_id) }}</div>
+						<div class="text-lg font-bold" :class="getBalanceTextClass(balance.balance_id)">
+							{{ balance.count || 0 }}
+						</div>
+						<div class="text-xs text-gray-500">{{ balance.game_config_player_balance?.nickname || '未知' }}</div>
 					</div>
 				</div>
 			</div>
@@ -101,8 +98,8 @@
 						</div>
 						<div class="text-right">
 							<div class="text-sm text-gray-600">可兑换为</div>
-							<div class="text-xl font-bold text-purple-600">{{ convertibleAmount }} {{ get_balance_label('balance_3') }}</div>
-							<div class="text-xs text-gray-500">(60%兑换率)</div>
+							<div class="text-xl font-bold text-purple-600">{{ convertibleAmount }} {{ game.game_config_gift.getCurrencyName() }}</div>
+							<div class="text-xs text-gray-500">({{ game.game_config_gift.getConvertRate() }}%兑换率)</div>
 						</div>
 					</div>
 					<el-button
@@ -112,7 +109,7 @@
 						:loading="converting"
 						@click="handleConvertGiftValue"
 					>
-						兑换为{{ get_balance_label('balance_3') }}
+						兑换为{{ game.game_config_gift.getCurrencyName() }}
 					</el-button>
 				</div>
 			</div>
@@ -126,7 +123,7 @@
 <script setup>
 import { inject, computed, onMounted, ref ,onActivated} from 'vue'
 import { getImageUrl } from '@/config/oss'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import AvatarFrameSelector from '@/components/common/AvatarFrameSelector.vue'
 
@@ -135,9 +132,9 @@ const avatarFrameSelectorRef = ref(null)
 const playerGuild = ref(null)
 const converting = ref(false)
 
-// 计算可兑换金额（60%）
+// 计算可兑换金额（使用配置的兑换率）
 const convertibleAmount = computed(() => {
-	return Math.floor((game.player.data?.gift_value_unconverted || 0) * 0.6)
+	return game.game_config_gift.calculateConvertedAmount(game.player.data?.gift_value_unconverted || 0)
 })
 
 onMounted(async () => {
@@ -167,11 +164,34 @@ const openAvatarFrameSelector = () => {
 	avatarFrameSelectorRef.value?.open(game.player.data?.avatar_frame_id)
 }
 
-// 获取货币标签
-const get_balance_label = (key) => {
-	const num = key.replace('balance_', '')
-	const config = game.game_config.get_value('game','balance_type')
-	return config?.[num] || '未知'
+// 获取余额表情符号
+const getBalanceEmoji = (balanceId) => {
+	const emojiMap = {
+		1: '💰',
+		2: '💎',
+		3: '🪙'
+	}
+	return emojiMap[balanceId] || '💰'
+}
+
+// 获取余额背景样式
+const getBalanceBgClass = (balanceId) => {
+	const bgMap = {
+		1: 'bg-yellow-50',
+		2: 'bg-blue-50',
+		3: 'bg-purple-50'
+	}
+	return bgMap[balanceId] || 'bg-gray-50'
+}
+
+// 获取余额文字颜色
+const getBalanceTextClass = (balanceId) => {
+	const colorMap = {
+		1: 'text-yellow-600',
+		2: 'text-blue-600',
+		3: 'text-purple-600'
+	}
+	return colorMap[balanceId] || 'text-gray-600'
 }
 
 // 兑换礼物价值
@@ -182,14 +202,14 @@ const handleConvertGiftValue = async () => {
 		converting.value = true
 		const res = await game.player.api.convert_gift_value()
 		if (res.code === 200) {
-			ElMessage.success(`成功兑换 ${convertibleAmount.value} ${get_balance_label('balance_3')}`)
+			message.success(`成功兑换 ${convertibleAmount.value} 星币`)
 			await game.player.update()
 		} else {
-			ElMessage.error(res.msg || '兑换失败')
+			message.error(res.msg || '兑换失败')
 		}
 	} catch (error) {
 		console.error('兑换失败:', error)
-		ElMessage.error('兑换失败')
+		message.error('兑换失败')
 	} finally {
 		converting.value = false
 	}

@@ -31,7 +31,7 @@
 			<!-- 中间：礼金和倒计时 -->
 			<div class="flex-1 flex flex-col gap-1 items-center">
 				<el-tag v-if="wedding.gift_money > 0" type="warning" size="small">
-					礼金 {{ wedding.gift_money_left }}/{{ wedding.gift_money }}
+					礼金 {{ wedding.gift_money_left }}/{{ wedding.gift_money }} {{ wedding.currency_name || '金币' }}
 				</el-tag>
 				<div class="text-xs text-gray-500">
 					<el-countdown :value="getDeadline(wedding.weddingTime)" format="HH:mm:ss" />

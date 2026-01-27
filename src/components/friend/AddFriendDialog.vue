@@ -95,7 +95,7 @@
 
 <script setup>
 import { ref, inject } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { getImageUrl } from '@/config/oss'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 
@@ -137,7 +137,7 @@ const show = () => {
 // 搜索玩家
 const handleSearch = async (page = 1) => {
 	if (!searchKeyword.value.trim()) {
-		ElMessage.warning('请输入玩家ID或昵称')
+		message.warning('请输入玩家ID或昵称')
 		return
 	}
 
@@ -155,11 +155,11 @@ const handleSearch = async (page = 1) => {
 				total_pages: 0
 			}
 		} else {
-			ElMessage.error(res.msg || '搜索失败')
+			message.error(res.msg || '搜索失败')
 			searchResults.value = []
 		}
 	} catch (error) {
-		ElMessage.error('搜索失败')
+		message.error('搜索失败')
 		searchResults.value = []
 	}
 
@@ -178,16 +178,16 @@ const handleAddFriend = async (player) => {
 	try {
 		const res = await game.player_friend.api.add(player.id)
 		if (res.code === 200) {
-			ElMessage.success('好友申请成功！')
+			message.success('好友申请成功！')
 			// 更新好友列表
 			await game.player_friend.update()
 			vis.value = false
 
 		} else {
-			ElMessage.error(res.msg || '申请友失败')
+			message.error(res.msg || '申请友失败')
 		}
 	} catch (error) {
-		ElMessage.error('申请好友失败')
+		message.error('申请好友失败')
 	}
 }
 

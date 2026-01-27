@@ -1,4 +1,4 @@
-import { request } from './config'
+import {request} from './config'
 
 class api {
 
@@ -44,9 +44,7 @@ export default class player_ladder_score {
 			target_player_id: targetPlayerId
 		};
 
-		const res = await this.api.challenge(requestData);
-
-		return res;
+		return await this.api.challenge(requestData);
 	}
 
 }

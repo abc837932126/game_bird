@@ -64,7 +64,10 @@
 						</el-button>
 					</div>
 					<div class="text-sm text-gray-500" @click="PlayerBirdInfoRef?.show(bird)">性别: {{ bird.sex === 0 ? '♂ 雄性' : '♀ 雌性' }}</div>
-					<div class="text-sm text-blue-500" @click="PlayerBirdInfoRef?.show(bird)">类型: {{ getBirdTypeName(bird.game_bird.type) }}</div>
+					<div class="text-sm text-blue-500" @click="PlayerBirdInfoRef?.show(bird)">类型: {{ bird.game_bird?.game_config_bird_type?.nickname || '未知' }}</div>
+					<div class="text-sm" :class="bird.is_paired ? 'text-pink-500' : 'text-gray-400'" @click="PlayerBirdInfoRef?.show(bird)">
+						{{ bird.is_paired ? '💕 已配对' : '💔 未配对' }}
+					</div>
 					<div class="text-sm text-gray-500" @click="PlayerBirdInfoRef?.show(bird)">重量: {{ bird.weight.toFixed(2) }}kg</div>
 					<div class="text-sm text-gray-500" @click="PlayerBirdInfoRef?.show(bird)">等级: Lv.{{ bird.lv }}</div>
 					<div class="text-sm text-gray-500" @click="PlayerBirdInfoRef?.show(bird)">成长: {{ bird.grow.toFixed(2) }}</div>
@@ -83,7 +86,8 @@
 
 <script setup>
 import { inject, ref, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
+import { message } from '@/game/notification-center'
 import PlayerBirdInfo from './PlayerBirdInfo.vue'
 import {getImageUrl} from '@/config/oss'
 
@@ -129,13 +133,13 @@ const handleToggleLock = async (bird) => {
 	try {
 		const res = await game.player_bird.api.toggleLock(bird.id)
 		if (res.code === 200) {
-			ElMessage.success(res.msg)
+			message.success(res.msg)
 			await game.player_bird.update()
 		} else {
-			ElMessage.error(res.msg || '操作失败')
+			message.error(res.msg || '操作失败')
 		}
 	} catch (error) {
-		ElMessage.error('操作失败')
+		message.error('操作失败')
 	}
 }
 
@@ -152,24 +156,17 @@ const handleSellAll = async () => {
 			}
 		)
 
-		const res = await game.player_bird.api.sellAll()
+		const res = await game.player_bird.sell({ sell_all: true })
 		if (res.code === 200) {
-			ElMessage.success(res.data.message)
-			await game.player_bird.update()
+			message.success(res.data.message)
 		} else {
-			ElMessage.error(res.msg || '出售失败')
+			message.error(res.msg || '出售失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('出售失败')
+			message.error('出售失败')
 		}
 	}
-}
-
-// 获取鸟类型名称
-const getBirdTypeName = (typeId) => {
-	const birdTypes = game.game_config.get_value('game_bird', 'type')
-	return birdTypes?.[typeId] || '未知'
 }
 
 onMounted(() => {
