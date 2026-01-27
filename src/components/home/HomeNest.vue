@@ -288,10 +288,10 @@ const harvest = async () => {
 	}
 	const birdsPerPlayer = res.data.birds_per_player || 1
 	const pillName = game.game_config_special_items.data?.fertility_pill?.nickname || '多胎丸'
-	const message = use_fertility_pill.value
+	const successMsg = use_fertility_pill.value
 		? `收获成功！使用${pillName}，双方各获得${birdsPerPlayer}只幼鸟，获得经验: ${res.data.player_exp_gained}`
 		: `收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`
-	message.success(message)
+	message.success(successMsg)
 	use_fertility_pill.value = false // 重置复选框
 	await game.player_bird.update()
 	await game.player.update()
