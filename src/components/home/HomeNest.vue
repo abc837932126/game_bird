@@ -327,27 +327,6 @@ const get_countdown_deadline = () => {
 	return targetTime * 1000
 }
 
-const format_pairing_progress = () => {
-	const nest = game.player_nest.data
-	if (!nest || !nest.is_pairing || !nest.start_time || !nest.player_bird_1) {
-		return '0%'
-	}
-
-	const startTime = Number(nest.start_time)
-	const now = Math.floor(currentTime.value / 1000)
-	const needTime = nest.player_bird_1.game_bird.need_time
-
-	// 计算配对时长（捕获时长的一半）
-	let duration = needTime / 2
-	if (nest.game_item_nest && nest.game_item_nest.time > 0) {
-		duration = duration * (1 - nest.game_item_nest.time / 100)
-	}
-
-	const elapsed = now - startTime
-	const progress = Math.min(100, Math.floor((elapsed / duration) * 100))
-	return `${progress}%`
-}
-
 const startTimer = () => {
 	if (timer.value) clearInterval(timer.value) // 先清除已有的
 
