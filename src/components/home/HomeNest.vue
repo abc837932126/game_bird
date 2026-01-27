@@ -152,11 +152,10 @@
 </template>
 
 <script setup>
-import {inject, onMounted, onUnmounted, onActivated, ref, computed} from "vue";
+import {inject, onMounted, onUnmounted, onActivated, onDeactivated,ref, computed} from "vue";
 import {message} from '@/game/notification-center'
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
-import {onDeactivated} from "@vue/runtime-core";
 
 const game = inject('game')
 const vis_bird_list = ref(false)
