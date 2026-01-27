@@ -71,7 +71,8 @@
 
 <script setup>
 import {inject, computed, ref, onMounted} from 'vue'
-import {ElMessage, ElMessageBox, ElBadge} from 'element-plus'
+import { ElMessageBox, ElBadge} from 'element-plus'
+import { message } from '@/game/notification-center'
 
 import FriendCard from './FriendCard.vue'
 import AddFriendDialog from './AddFriendDialog.vue'
@@ -133,14 +134,14 @@ const handleDeleteFriend = async (friend) => {
 		// 调用删除好友API
 		const res = await game.player_friend.api.delete(friend.friendship_id)
 		if (res.code === 200) {
-			ElMessage.success('删除成功')
+			message.success('删除成功')
 			await game.player_friend.update()
 		} else {
-			ElMessage.error(res.msg || '删除失败')
+			message.error(res.msg || '删除失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('删除失败')
+			message.error('删除失败')
 		}
 	}
 }

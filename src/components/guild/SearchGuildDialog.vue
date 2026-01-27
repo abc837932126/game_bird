@@ -60,7 +60,7 @@
 
 <script setup>
 import { inject, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -79,7 +79,7 @@ const show = () => {
 
 const handleSearch = async () => {
 	if (!keyword.value.trim()) {
-		ElMessage.warning('请输入搜索关键词')
+		message.warning('请输入搜索关键词')
 		return
 	}
 
@@ -90,11 +90,11 @@ const handleSearch = async () => {
 			guilds.value = res.data
 			searched.value = true
 		} else {
-			ElMessage.error(res.msg || '搜索失败')
+			message.error(res.msg || '搜索失败')
 		}
 	} catch (error) {
 		console.error('搜索工会失败:', error)
-		ElMessage.error('搜索失败')
+		message.error('搜索失败')
 	} finally {
 		loading.value = false
 	}
@@ -109,13 +109,13 @@ const handleApply = async (guild) => {
 		})
 
 		if (res.code === 200) {
-			ElMessage.success('申请已提交')
+			message.success('申请已提交')
 		} else {
-			ElMessage.error(res.msg || '申请失败')
+			message.error(res.msg || '申请失败')
 		}
 	} catch (error) {
 		console.error('申请加入工会失败:', error)
-		ElMessage.error('申请失败')
+		message.error('申请失败')
 	} finally {
 		applyingGuildId.value = null
 	}

@@ -82,7 +82,8 @@
 
 <script setup>
 import { inject, ref } from "vue"
-import { ElButton, ElDialog, ElMessage, ElIcon, ElInputNumber } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElInputNumber } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
 
@@ -107,14 +108,14 @@ const showDialog = (item) => {
 
 const useItem = async () => {
 	// TODO: 实现使用训练场逻辑
-	ElMessage.info('使用训练场功能待实现')
+	message.info('使用训练场功能待实现')
 	// const res = await game.player_item_train.use(currentItem.value.id, useCount.value)
 	// if (res.code === 200) {
-	// 	ElMessage.success(res.msg)
+	// 	message.success(res.msg)
 	// 	dialogVisible.value = false
 	// 	await game.player_item_train.update()
 	// } else {
-	// 	ElMessage.error(res.msg)
+	// 	message.error(res.msg)
 	// }
 }
 

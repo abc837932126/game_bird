@@ -46,8 +46,7 @@ export function generateSkillLogsHtml(skillLogs) {
     // 处理克制关系日志
     if (log.type === 'restraint_bonus') {
       const effectTexts = log.effects.map(effect => {
-        const targetName = ownerName
-        return formatEffect(effect, targetName)
+        return formatEffect(effect, ownerName)
       }).join('，')
 
       return `<div class="skill-trigger restraint">

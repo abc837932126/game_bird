@@ -1,9 +1,14 @@
 import {reactive} from 'vue'
 import { canManageGuild } from '@/utils/guild-position'
 
-import game_config from './game_config.js'
 import game_config_special_items from './game_config_special_items.js'
+import game_config_ladder from './game_config_ladder.js'
+import game_config_bird_type from './game_config_bird_type.js'
 import game_config_guild_create from './game_config_guild_create.js'
+import game_config_oss from './game_config_oss.js'
+import game_config_marriage from './game_config_marriage.js'
+import game_config_red_packet from './game_config_red_packet.js'
+import game_config_gift from './game_config_gift.js'
 import game_title from "./game_title.js";
 import game_map from "./game_map.js";
 
@@ -61,9 +66,14 @@ class Game {
 		this.token = ""
 		this.page = 'page_home'
 		this.player = new player();
-		this.game_config = new game_config();
 		this.game_config_special_items = new game_config_special_items();
+		this.game_config_ladder = new game_config_ladder();
+		this.game_config_bird_type = new game_config_bird_type();
 		this.game_config_guild_create = new game_config_guild_create();
+		this.game_config_oss = new game_config_oss();
+		this.game_config_marriage = new game_config_marriage();
+		this.game_config_red_packet = new game_config_red_packet();
+		this.game_config_gift = new game_config_gift();
 		this.game_title = new game_title();
 		this.game_map = new game_map();
 
@@ -135,8 +145,12 @@ class Game {
 		await this.game_avatar_frame.update()
 		await this.player.update()
 		await this.player_friend.update()
-		await this.game_config.update()
 		await this.game_config_special_items.update()
+		await this.game_config_ladder.update()
+		await this.game_config_oss.update()
+		await this.game_config_marriage.update()
+		await this.game_config_red_packet.update()
+		await this.game_config_gift.update()
 		await this.game_title.update()
 		await this.game_map.update()
 		await this.game_item_gift.update()

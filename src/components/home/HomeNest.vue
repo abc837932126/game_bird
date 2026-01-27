@@ -153,7 +153,7 @@
 
 <script setup>
 import {inject, onMounted, onUnmounted, onActivated, ref, computed} from "vue";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {message} from '@/game/notification-center'
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
 import {onDeactivated} from "@vue/runtime-core";
@@ -197,17 +197,17 @@ const show_buff_list = async () => {
 }
 
 const show_remove_confirm = async (slot) => {
-	ElMessageBox.confirm('确定要移除这只鸟吗？', '提示', {
+	message.confirm('确定要移除这只鸟吗？', '提示', {
 		confirmButtonText: '确定',
 		cancelButtonText: '取消',
 		type: 'warning'
 	}).then(async () => {
 		const res = await game.player_nest.set_bird(slot, null)
 		if (res.code !== 200) {
-			ElMessage.error(res.msg)
+			message.error(res.msg)
 			return
 		}
-		ElMessage.success("移除成功")
+		message.success("移除成功")
 	}).catch(() => {
 		// 取消操作
 	})
@@ -217,20 +217,20 @@ const set_bird = async (bird) => {
 	const res = await game.player_nest.set_bird(select_slot.value, bird?.id || null)
 	vis_bird_list.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success(bird ? "设置成功" : "移除成功")
+	message.success(bird ? "设置成功" : "移除成功")
 }
 
 const use_item = async (item) => {
 	const res = await game.player_nest.use_nest_item(item.id)
 	vis_item_list.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success("使用成功")
+	message.success("使用成功")
 	await game.player_item_nest.update()
 }
 
@@ -238,10 +238,10 @@ const use_buff = async (buff) => {
 	const res = await game.player_nest.use_nest_buff(buff.game_item_nest_buff_id)
 	vis_buff_list.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success("加速成功")
+	message.success("加速成功")
 	await game.player_nest.update()
 	await game.player_item_nest_buff.update()
 }
@@ -254,10 +254,10 @@ const can_start_pairing = () => {
 const start_pairing = async () => {
 	const res = await game.player_nest.start_pairing()
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success("开始配对")
+	message.success("开始配对")
 }
 
 const is_pairing_complete = () => {
@@ -283,7 +283,7 @@ const is_pairing_complete = () => {
 const harvest = async () => {
 	const res = await game.player_nest.harvest(use_fertility_pill.value)
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
 	const birdsPerPlayer = res.data.birds_per_player || 1
@@ -291,7 +291,7 @@ const harvest = async () => {
 	const message = use_fertility_pill.value
 		? `收获成功！使用${pillName}，双方各获得${birdsPerPlayer}只幼鸟，获得经验: ${res.data.player_exp_gained}`
 		: `收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`
-	ElMessage.success(message)
+	message.success(message)
 	use_fertility_pill.value = false // 重置复选框
 	await game.player_bird.update()
 	await game.player.update()

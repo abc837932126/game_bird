@@ -118,7 +118,7 @@
 
 <script setup>
 import {ref, inject, computed} from 'vue'
-import {ElMessage} from 'element-plus'
+import { message } from '@/game/notification-center'
 import {Loading} from '@element-plus/icons-vue'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 import GiftSendDialog from '../common/GiftSendDialog.vue'
@@ -275,15 +275,15 @@ const handleAddFriend = async () => {
 		const playerId = userInfo.value.player_id || userInfo.value.id
 		const response = await game.player_friend.api.add(playerId)
 		if (response.code === 200) {
-			ElMessage.success('好友申请已发送')
+			message.success('好友申请已发送')
 			// 刷新好友列表
 			await game.player_friend.update()
 		} else {
-			ElMessage.error(response.msg || '添加好友失败')
+			message.error(response.msg || '添加好友失败')
 		}
 	} catch (error) {
 		console.error('添加好友失败:', error)
-		ElMessage.error('添加好友失败')
+		message.error('添加好友失败')
 	} finally {
 		addingFriend.value = false
 	}
@@ -291,7 +291,7 @@ const handleAddFriend = async () => {
 
 // 发送消息（功能待定）
 const handleSendMessage = () => {
-	ElMessage.info('私聊功能开发中...')
+	message.info('私聊功能开发中...')
 }
 
 // 赠送礼物

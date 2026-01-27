@@ -88,7 +88,8 @@
 
 <script setup>
 import { inject, ref } from "vue"
-import { ElButton, ElDialog, ElMessage, ElIcon, ElInputNumber } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElInputNumber } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
 
@@ -120,12 +121,12 @@ const buyItem = async () => {
 		const res = await game.game_item_trap.buy(currentItem.value.id, buyCount.value)
 
 		if (res.code === 200) {
-			ElMessage.success(res.msg)
+			message.success(res.msg)
 			dialogVisible.value = false
 			await game.player.update()
 			await game.player_item_trap.update()
 		} else {
-			ElMessage.error(res.msg)
+			message.error(res.msg)
 		}
 	} finally {
 		loading.value = false

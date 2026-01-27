@@ -48,7 +48,8 @@
 
 <script setup>
 import { ref, inject } from 'vue'
-import { ElDialog, ElButton, ElMessage, ElIcon, ElImage } from 'element-plus'
+import { ElDialog, ElButton, ElIcon, ElImage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from '@element-plus/icons-vue'
 import { getImageUrl } from '@/config/oss'
 import CommonBattleDialog from '@/components/common/CommonBattleDialog.vue'
@@ -89,11 +90,11 @@ const isCurrentMap = (mapId) => {
 
 const handleMapClick = async (map) => {
 	if (isLocked(map)) {
-		ElMessage.error(`需要等级 ${map.lv} 才能进入该地图`)
+		message.error(`需要等级 ${map.lv} 才能进入该地图`)
 		return
 	}
 	if (isCurrentMap(map.id)) {
-		ElMessage.info('您已经在该地图了')
+		message.info('您已经在该地图了')
 		return
 	}
 
@@ -125,7 +126,7 @@ const showBattleDialog = async (map) => {
 		},
 		onBattleComplete: async (response) => {
 			if (response.data.battle_result.winner === 'challenger') {
-				ElMessage.success('战斗胜利！成功进入新地图')
+				message.success('战斗胜利！成功进入新地图')
 				await loadPlayerInfo()
 				vis.value = false
 			}

@@ -44,7 +44,7 @@
 
 <script setup>
 import { inject, ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -82,7 +82,7 @@ const show = async () => {
 const handleSubmit = async () => {
 	// 验证工会名称
 	if (!formData.value.nickname || formData.value.nickname.trim().length < 2) {
-		ElMessage.error('工会名称至少需要2个字符')
+		message.error('工会名称至少需要2个字符')
 		return
 	}
 
@@ -94,15 +94,15 @@ const handleSubmit = async () => {
 		})
 
 		if (res.code === 200) {
-			ElMessage.success('工会创建成功！')
+			message.success('工会创建成功！')
 			vis.value = false
 			emit('created')
 		} else {
-			ElMessage.error(res.msg || '创建工会失败')
+			message.error(res.msg || '创建工会失败')
 		}
 	} catch (error) {
 		console.error('创建工会失败:', error)
-		ElMessage.error('创建工会失败')
+		message.error('创建工会失败')
 	} finally {
 		loading.value = false
 	}

@@ -108,7 +108,8 @@
 
 <script setup>
 import { inject, ref, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { MoreFilled } from '@element-plus/icons-vue'
 import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import {
@@ -177,7 +178,7 @@ const loadMembers = async () => {
 	if (res.code === 200) {
 		members.value = res.data
 	} else {
-		ElMessage.error(res.msg || '加载成员列表失败')
+		message.error(res.msg || '加载成员列表失败')
 	}
 }
 
@@ -194,10 +195,10 @@ const handlePromote = async (member) => {
 		})
 
 		if (res.code === 200) {
-			ElMessage.success('提升成功')
+			message.success('提升成功')
 			await loadMembers()
 		} else {
-			ElMessage.error(res.msg || '提升失败')
+			message.error(res.msg || '提升失败')
 		}
 	} catch (error) {
 		// 用户取消
@@ -217,10 +218,10 @@ const handleDemote = async (member) => {
 		})
 
 		if (res.code === 200) {
-			ElMessage.success('降职成功')
+			message.success('降职成功')
 			await loadMembers()
 		} else {
-			ElMessage.error(res.msg || '降职失败')
+			message.error(res.msg || '降职失败')
 		}
 	} catch (error) {
 		// 用户取消
@@ -241,11 +242,11 @@ const handleKick = async (member) => {
 		})
 
 		if (res.code === 200) {
-			ElMessage.success('已踢出')
+			message.success('已踢出')
 			await loadMembers()
 			await game.guild.update()
 		} else {
-			ElMessage.error(res.msg || '踢出失败')
+			message.error(res.msg || '踢出失败')
 		}
 	} catch (error) {
 		// 用户取消

@@ -121,7 +121,7 @@
 
 <script setup>
 import {ref, inject, onMounted, computed} from 'vue'
-import {ElMessage} from 'element-plus'
+import { message } from '@/game/notification-center'
 import {Loading} from '@element-plus/icons-vue'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 import LineupDialog from './LineupDialog.vue'
@@ -192,13 +192,13 @@ const loadRankList = async () => {
     const res = await game.player_ladder_score.getRank(selectedMapId.value, page)
 
     if (res.code !== 200) {
-      ElMessage.error(res.msg || '加载排行榜失败')
+      message.error(res.msg || '加载排行榜失败')
     } else if (res.data.pagination) {
       // 更新分页信息
       pagination.value = res.data.pagination
     }
   } catch (error) {
-    ElMessage.error('网络错误')
+    message.error('网络错误')
     console.error('加载排行榜失败:', error)
   } finally {
     loading.value = false
@@ -208,11 +208,11 @@ const loadRankList = async () => {
 // 打开对战界面
 const openBattleDialog = async (player) => {
   if (player.is_current_player) {
-    ElMessage.warning('不能挑战自己')
+    message.warning('不能挑战自己')
     return
   }
   if (!player.lineup) {
-    ElMessage.warning('该玩家尚未设置阵容')
+    message.warning('该玩家尚未设置阵容')
     return
   }
 

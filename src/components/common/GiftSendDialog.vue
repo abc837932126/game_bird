@@ -86,7 +86,7 @@
 
 <script setup>
 import {ref, inject, computed} from 'vue'
-import {ElMessage} from 'element-plus'
+import {message} from '@/game/notification-center'
 import {getImageUrl} from "@/config/oss.js";
 
 
@@ -162,18 +162,18 @@ const sendByPurchase = async () => {
     )
 
     if (response.code === 200) {
-      ElMessage.success('赠送成功！')
+      message.success('赠送成功！')
       // 刷新余额和背包
       await game.player.update()
       await game.player_item_gift.update()
       // 关闭对话框
       visible.value = false
     } else {
-      ElMessage.error(response.msg || '赠送失败')
+      message.error(response.msg || '赠送失败')
     }
   } catch (error) {
     console.error('赠送失败:', error)
-    ElMessage.error('赠送失败，请重试')
+    message.error('赠送失败，请重试')
   } finally {
     sending.value = false
   }
@@ -186,7 +186,7 @@ const sendFromBackpack = async () => {
   // 检查背包数量
   const backpackCount = getBackpackCount(selectedGift.value.id)
   if (backpackCount < giftCount.value) {
-    ElMessage.warning('背包礼物数量不足')
+    message.warning('背包礼物数量不足')
     return
   }
 
@@ -200,17 +200,17 @@ const sendFromBackpack = async () => {
     )
 
     if (response.code === 200) {
-      ElMessage.success('赠送成功！')
+      message.success('赠送成功！')
       // 刷新背包
       await game.player_item_gift.update()
       // 关闭对话框
       visible.value = false
     } else {
-      ElMessage.error(response.msg || '赠送失败')
+      message.error(response.msg || '赠送失败')
     }
   } catch (error) {
     console.error('赠送失败:', error)
-    ElMessage.error('赠送失败，请重试')
+    message.error('赠送失败，请重试')
   } finally {
     sending.value = false
   }

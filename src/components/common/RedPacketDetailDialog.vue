@@ -125,7 +125,7 @@
 
 <script setup>
 import {ref, inject, computed} from 'vue'
-import {ElMessage} from 'element-plus'
+import {message} from '@/game/notification-center'
 import {Loading} from '@element-plus/icons-vue'
 import {getImageUrl} from '@/config/oss'
 import PlayerAvatar from './PlayerAvatar.vue'
@@ -143,7 +143,7 @@ const claimResult = ref({amount: 0, is_best: false})
 
 // 获取红包货币类型名称
 const balanceType = computed(() => {
-  const redPacketBalanceId = game.game_config.get_value('game', 'red_packet_balance_id') || 3
+  const redPacketBalanceId = 3 // 红包货币类型ID
   const balance = game.player.data?.player_balance?.find(b => b.balance_id === redPacketBalanceId)
   return balance?.game_config_player_balance?.nickname || ''
 })
@@ -189,11 +189,11 @@ const loadDetail = async (redPacketId) => {
       hasClaimed.value = response.data.has_claimed
       bestPlayerId.value = response.data.best_player_id
     } else {
-      ElMessage.error(response.msg || '加载失败')
+      message.error(response.msg || '加载失败')
     }
   } catch (error) {
     console.error('加载红包详情失败:', error)
-    ElMessage.error('加载失败，请重试')
+    message.error('加载失败，请重试')
   }
 }
 
@@ -219,11 +219,11 @@ const claimRedPacket = async () => {
       // 重新加载详情
       await loadDetail(redPacketData.value.id)
     } else {
-      ElMessage.error(response.msg || '领取失败')
+      message.error(response.msg || '领取失败')
     }
   } catch (error) {
     console.error('领取红包失败:', error)
-    ElMessage.error('领取失败，请重试')
+    message.error('领取失败，请重试')
   } finally {
     claiming.value = false
   }

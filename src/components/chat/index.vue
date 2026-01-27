@@ -205,7 +205,8 @@
 
 <script setup>
 import {ref, inject, onMounted, onActivated, onUnmounted, nextTick, watch, markRaw} from 'vue'
-import {ElMessage, ElCard} from 'element-plus'
+import { ElCard} from 'element-plus'
+import { message } from '@/game/notification-center'
 import {ChatDotRound} from '@element-plus/icons-vue'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 import UserDetailDialog from '../UserDetailDialog/index.vue'
@@ -247,7 +248,7 @@ const getNameColor = (msg) => {
 const showUserInfo = (msg) => {
   // 不能查看自己的信息
   if (isMyMessage(msg)) {
-    ElMessage.info('这是你自己的消息')
+    message.info('这是你自己的消息')
     return
   }
   userInfoDialogRef.value?.open(msg)
@@ -294,7 +295,10 @@ const formatTime = (timeString) => {
 // 获取礼物图标URL
 const getGiftImageUrl = (giftId) => {
   const gift = game.game_item_gift.get(giftId);
-  return getImageUrl("gift" , gift.nickname)
+  if (!gift) {
+    return ''; // 如果找不到礼物，返回空字符串
+  }
+  return getImageUrl("gift", gift.nickname)
 }
 
 // 滚动到底部（确保 DOM 完全渲染后执行）
@@ -330,11 +334,11 @@ const sendMessage = async () => {
       await nextTick()
       scrollToBottom()
     } else {
-      ElMessage.error(res.msg || '发送失败')
+      message.error(res.msg || '发送失败')
     }
   } catch (error) {
     console.error('发送消息失败:', error)
-    ElMessage.error('发送失败，请重试')
+    message.error('发送失败，请重试')
   } finally {
     sending.value = false
   }

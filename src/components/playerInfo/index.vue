@@ -98,8 +98,8 @@
 						</div>
 						<div class="text-right">
 							<div class="text-sm text-gray-600">可兑换为</div>
-							<div class="text-xl font-bold text-purple-600">{{ convertibleAmount }} 星币</div>
-							<div class="text-xs text-gray-500">(60%兑换率)</div>
+							<div class="text-xl font-bold text-purple-600">{{ convertibleAmount }} {{ game.game_config_gift.getCurrencyName() }}</div>
+							<div class="text-xs text-gray-500">({{ game.game_config_gift.getConvertRate() }}%兑换率)</div>
 						</div>
 					</div>
 					<el-button
@@ -109,7 +109,7 @@
 						:loading="converting"
 						@click="handleConvertGiftValue"
 					>
-						兑换为星币
+						兑换为{{ game.game_config_gift.getCurrencyName() }}
 					</el-button>
 				</div>
 			</div>
@@ -123,7 +123,7 @@
 <script setup>
 import { inject, computed, onMounted, ref ,onActivated} from 'vue'
 import { getImageUrl } from '@/config/oss'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import AvatarFrameSelector from '@/components/common/AvatarFrameSelector.vue'
 
@@ -132,9 +132,9 @@ const avatarFrameSelectorRef = ref(null)
 const playerGuild = ref(null)
 const converting = ref(false)
 
-// 计算可兑换金额（60%）
+// 计算可兑换金额（使用配置的兑换率）
 const convertibleAmount = computed(() => {
-	return Math.floor((game.player.data?.gift_value_unconverted || 0) * 0.6)
+	return game.game_config_gift.calculateConvertedAmount(game.player.data?.gift_value_unconverted || 0)
 })
 
 onMounted(async () => {
@@ -202,14 +202,14 @@ const handleConvertGiftValue = async () => {
 		converting.value = true
 		const res = await game.player.api.convert_gift_value()
 		if (res.code === 200) {
-			ElMessage.success(`成功兑换 ${convertibleAmount.value} 星币`)
+			message.success(`成功兑换 ${convertibleAmount.value} 星币`)
 			await game.player.update()
 		} else {
-			ElMessage.error(res.msg || '兑换失败')
+			message.error(res.msg || '兑换失败')
 		}
 	} catch (error) {
 		console.error('兑换失败:', error)
-		ElMessage.error('兑换失败')
+		message.error('兑换失败')
 	} finally {
 		converting.value = false
 	}

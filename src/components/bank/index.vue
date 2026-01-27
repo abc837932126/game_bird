@@ -63,7 +63,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { game } from '../../game'
 
 const activeTab = ref('deposit')
@@ -111,13 +111,13 @@ async function handleDeposit() {
 	try {
 		const res = await game.bank.deposit(depositForm.value.currency_type, depositForm.value.amount)
 		if (res.code === 200) {
-			ElMessage.success('存款成功')
+			message.success('存款成功')
 			await game.player.update()
 		} else {
-			ElMessage.error(res.message || '存款失败')
+			message.error(res.message || '存款失败')
 		}
 	} catch (error) {
-		ElMessage.error('存款失败')
+		message.error('存款失败')
 	}
 }
 
@@ -125,13 +125,13 @@ async function handleWithdraw() {
 	try {
 		const res = await game.bank.withdraw(withdrawForm.value.currency_type, withdrawForm.value.amount)
 		if (res.code === 200) {
-			ElMessage.success('取款成功')
+			message.success('取款成功')
 			await game.player.update()
 		} else {
-			ElMessage.error(res.message || '取款失败')
+			message.error(res.message || '取款失败')
 		}
 	} catch (error) {
-		ElMessage.error('取款失败')
+		message.error('取款失败')
 	}
 }
 
@@ -139,14 +139,14 @@ async function handleUpgrade() {
 	try {
 		const res = await game.bank.upgradeLimit()
 		if (res.code === 200) {
-			ElMessage.success('额度提升成功')
+			message.success('额度提升成功')
 			await game.player.update()
 			await game.bank.update()
 		} else {
-			ElMessage.error(res.message || '额度提升失败')
+			message.error(res.message || '额度提升失败')
 		}
 	} catch (error) {
-		ElMessage.error('额度提升失败')
+		message.error('额度提升失败')
 	}
 }
 

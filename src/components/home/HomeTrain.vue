@@ -116,7 +116,7 @@
 
 <script setup>
 import {inject, onMounted, onUnmounted, onActivated, onDeactivated, ref} from "vue";
-import {ElMessage} from "element-plus";
+import { message } from '@/game/notification-center';
 import BirdSelector from '../common/BirdSelector.vue'
 import {getImageUrl} from '@/config/oss'
 
@@ -145,20 +145,20 @@ const set_bird = async (bird) => {
   const res = await game.player_train.set_bird(select_train.value.id, bird?.id || null)
   vis_bird_list.value = false
   if (res.code !== 200) {
-    ElMessage.error(res.msg)
+    message.error(res.msg)
     return
   }
-  ElMessage.success(bird ? "设置成功" : "取消成功")
+  message.success(bird ? "设置成功" : "取消成功")
 }
 
 const use_item = async (item) => {
   const res = await game.player_train.use_item(select_train.value.id, item.id)
   vis_item_list.value = false
   if (res.code !== 200) {
-    ElMessage.error(res.msg)
+    message.error(res.msg)
     return
   }
-  ElMessage.success("使用成功")
+  message.success("使用成功")
   await game.player_item_train.update()
 }
 
@@ -170,17 +170,17 @@ const show_buff_list = async (train) => {
 
 const use_buff = async (buff) => {
   if (!select_train.value) {
-    ElMessage.error('请先选择训练场')
+    message.error('请先选择训练场')
     return
   }
 
   const res = await game.player_train.use_player_item_train_buff(select_train.value.id, buff.id)
   vis_buff_list.value = false
   if (res.code !== 200) {
-    ElMessage.error(res.msg)
+    message.error(res.msg)
     return
   }
-  ElMessage.success('加速成功')
+  message.success('加速成功')
   await game.player_item_train_buff.update()
   await game.player_train.update()
 }
@@ -188,10 +188,10 @@ const use_buff = async (buff) => {
 const get_reward = async (train) => {
   const res = await game.player_train.get_reward(train.id)
   if (res.code !== 200) {
-    ElMessage.error(res.msg)
+    message.error(res.msg)
     return
   }
-  ElMessage.success(`领取成功: ${res.data.rewardCount}个奖励`)
+  message.success(`领取成功: ${res.data.rewardCount}个奖励`)
   // 清除该训练场的被偷取卡片缓存
   delete stolenCardsMap.value[train.id]
   await game.player_item_bird_exp.update()

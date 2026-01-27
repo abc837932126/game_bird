@@ -149,7 +149,8 @@
 
 <script setup>
 import {inject, onActivated, onDeactivated, onMounted, onUnmounted, ref, computed} from "vue";
-import {ElMessage, ElMessageBox} from "element-plus";
+import { ElMessageBox} from 'element-plus'
+import { message } from '@/game/notification-center';
 import {Lock} from '@element-plus/icons-vue';
 import {getImageUrl} from '@/config/oss'
 import PlayerBirdInfo from '@/components/playerbird/PlayerBirdInfo.vue'
@@ -169,21 +170,25 @@ const currentTime = ref(Date.now())
 // 陷阱配置（用于计算解锁价格）
 const trapConfig = ref(null)
 
-// 显示的陷阱列表（包括一个待解锁占位符）
+// 显示的陷阱列表（包括占位符代表下一个可解锁的陷阱）
 const displayTraps = computed(() => {
 	if (!game.player_trap.data) return []
 
-	// 只显示未锁定的陷阱
+	// 显示所有未锁定的陷阱
 	const unlockedTraps = game.player_trap.data.filter(t => !t.is_locked)
 
-	// 在最后添加一个待解锁的占位符
-	unlockedTraps.push({
-		id: 'next_unlock',
-		nickname: '待解锁陷阱',
-		image_url: '',
-		is_locked: true,
-		is_placeholder: true
-	})
+	// 检查是否还有可以解锁的陷阱
+	const nextLevel = getNextUnlockLevel()
+	if (nextLevel !== null) {
+		// 添加占位符代表下一个可以解锁的陷阱
+		unlockedTraps.push({
+			id: 'next_unlock',
+			nickname: '待解锁陷阱',
+			image_url: '',
+			is_locked: true,
+			is_placeholder: true
+		})
+	}
 
 	return unlockedTraps
 })
@@ -198,7 +203,7 @@ const set_bait = async (item) => {
 	const res = await game.player_trap.set_bait(select_trap.value.id, item.id)
 	vis_item_bait.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 	}
   await game.player_trap.update()
 }
@@ -206,16 +211,24 @@ const set_bait = async (item) => {
 const get_bird = async (trap) => {
 	const res = await game.player_trap.get_bird(trap.id)
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
 
 	// 获取新鸟数据
 	const newBird = res.data.new_bird
+	const expGained = res.data.exp_gained || 0
 
 	// 添加到鸟仓库
 	if (game.player_bird.data && newBird) {
 		game.player_bird.data.push(newBird)
+	}
+
+	// 显示成功消息（包含经验信息）
+	if (expGained > 0) {
+		message.success(`捕获成功！获得 ${newBird.game_bird.nickname}，经验 +${expGained}`)
+	} else {
+		message.success(`捕获成功！获得 ${newBird.game_bird.nickname}`)
 	}
 
 	// 显示新鸟信息弹窗
@@ -235,23 +248,23 @@ const show_trap_buff_list = async (trap) => {
 
 const use_trap_buff = async (buff) => {
 	if (!select_trap.value) {
-		ElMessage.error('请先选择陷阱')
+		message.error('请先选择陷阱')
 		return
 	}
 
 	const res = await game.player_trap.use_player_item_trap_buff(select_trap.value.id, buff.game_item_trap_buff.id)
 	vis_item_trap_buff.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success('使用成功')
+	message.success('使用成功')
 	await game.player_trap.update()
 	await game.player_item_trap_buff.update()
 }
 
 const changeTrap = (trap) => {
-	ElMessage.info('更换陷阱功能开发中')
+	message.info('更换陷阱功能开发中')
 }
 
 const get_trap_time = (trap) => {
@@ -369,54 +382,54 @@ const canUnlock = (trap) => {
 
 // 处理解锁
 const handleUnlock = async (trap) => {
-	// 如果是占位符陷阱
-	if (trap.is_placeholder) {
-		// 检查是否满足等级要求
-		if (!canUnlockPlaceholder()) {
-			const nextLevel = getNextUnlockLevel()
-			ElMessage.info(`需要达到 ${nextLevel} 级才能解锁下一个陷阱`)
-			return
-		}
-
-		// 满足等级要求，执行解锁
-		const price = getPlaceholderPrice()
-		const currencyName = getPlaceholderCurrency()
-
-		try {
-			await ElMessageBox.confirm(
-				`确定要花费 ${price} ${currencyName} 解锁新陷阱吗？`,
-				'解锁陷阱',
-				{
-					type: 'warning',
-					confirmButtonText: '确认解锁',
-					cancelButtonText: '取消'
-				}
-			)
-		} catch {
-			return
-		}
-
-		const res = await game.player_trap.unlock_trap()
-
-		if (res.code !== 200) {
-			ElMessage.error(res.msg || '解锁失败')
-			return
-		}
-
-		ElMessage.success('解锁成功')
-		await game.player_trap.update()
+	// 只处理占位符陷阱
+	if (!trap.is_placeholder) {
+		message.error('该陷阱已解锁')
 		return
 	}
 
-	// 旧逻辑（不应该执行到这里）
-	ElMessage.error('该功能已废弃')
+	// 检查是否满足等级要求
+	if (!canUnlockPlaceholder()) {
+		const nextLevel = getNextUnlockLevel()
+		message.info(`需要达到 ${nextLevel} 级才能解锁下一个陷阱`)
+		return
+	}
+
+	// 满足等级要求，执行解锁
+	const price = getPlaceholderPrice()
+	const currencyName = getPlaceholderCurrency()
+
+	try {
+		await ElMessageBox.confirm(
+			`确定要花费 ${price} ${currencyName} 解锁新陷阱吗？`,
+			'解锁陷阱',
+			{
+				type: 'warning',
+				confirmButtonText: '确认解锁',
+				cancelButtonText: '取消'
+			}
+		)
+	} catch {
+		return
+	}
+
+	const res = await game.player_trap.unlock_trap()
+
+	if (res.code !== 200) {
+		message.error(res.msg || '解锁失败')
+		return
+	}
+
+	message.success('解锁成功')
+	await game.player_trap.update()
 }
 
 // 获取下一个解锁所需等级
 const getNextUnlockLevel = () => {
 	if (!trapConfig.value || !game.player_trap.data) return null
 
-	const currentCount = game.player_trap.data.length
+	// 计算已解锁的陷阱数量（不包括锁定的）
+	const currentCount = game.player_trap.data.filter(t => !t.is_locked).length
 	const config = trapConfig.value
 	let accumulatedTraps = config.initial_trap_count
 
@@ -443,7 +456,8 @@ const canUnlockPlaceholder = () => {
 const getPlaceholderPrice = () => {
 	if (!trapConfig.value || !game.player_trap.data) return 0
 
-	const currentCount = game.player_trap.data.length
+	// 计算已解锁的陷阱数量（不包括锁定的）
+	const currentCount = game.player_trap.data.filter(t => !t.is_locked).length
 	const config = trapConfig.value
 	let accumulatedTraps = config.initial_trap_count
 
@@ -463,7 +477,8 @@ const getPlaceholderPrice = () => {
 const getPlaceholderCurrency = () => {
 	if (!trapConfig.value || !game.player_trap.data) return '金币'
 
-	const currentCount = game.player_trap.data.length
+	// 计算已解锁的陷阱数量（不包括锁定的）
+	const currentCount = game.player_trap.data.filter(t => !t.is_locked).length
 	const config = trapConfig.value
 	let accumulatedTraps = config.initial_trap_count
 
@@ -493,7 +508,7 @@ const loadTrapConfig = async () => {
 	if (res.code === 200) {
 		trapConfig.value = game.player_trap.config;
 	} else {
-		ElMessage.error('加载配置失败：' + res.msg);
+		message.error('加载配置失败：' + res.msg);
 	}
 }
 

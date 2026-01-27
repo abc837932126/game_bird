@@ -49,7 +49,8 @@
 
 <script setup>
 import { ref, inject, computed } from 'vue'
-import { ElButton, ElDialog, ElMessage, ElCard } from 'element-plus'
+import { ElButton, ElDialog, ElCard } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const visible = ref(false)
@@ -73,7 +74,7 @@ const handleAccept = async (request) => {
 	try {
 		const res = await game.player_friend.api.accept(request.request_id)
 		if (res.code === 200) {
-			ElMessage.success(res.msg || '已同意好友申请')
+			message.success(res.msg || '已同意好友申请')
 			// 重新加载待处理申请和好友列表
 			await Promise.all([
 				game.player_friend.updatePending(),
@@ -81,10 +82,10 @@ const handleAccept = async (request) => {
 			])
 			emit('success')
 		} else {
-			ElMessage.error(res.msg || '操作失败')
+			message.error(res.msg || '操作失败')
 		}
 	} catch (error) {
-		ElMessage.error('操作失败: ' + error.message)
+		message.error('操作失败: ' + error.message)
 	}
 }
 
@@ -93,15 +94,15 @@ const handleReject = async (request) => {
 	try {
 		const res = await game.player_friend.api.reject(request.request_id)
 		if (res.code === 200) {
-			ElMessage.success(res.msg || '已拒绝好友申请')
+			message.success(res.msg || '已拒绝好友申请')
 			// 重新加载待处理申请
 			await game.player_friend.updatePending()
 			emit('success')
 		} else {
-			ElMessage.error(res.msg || '操作失败')
+			message.error(res.msg || '操作失败')
 		}
 	} catch (error) {
-		ElMessage.error('操作失败: ' + error.message)
+		message.error('操作失败: ' + error.message)
 	}
 }
 

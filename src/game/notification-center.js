@@ -1,8 +1,8 @@
-import { wsClient } from './config.js'
-import { ElNotification } from 'element-plus'
+import wsClient from './ws-client.js'
+import { ElNotification, ElMessage, ElMessageBox } from 'element-plus'
 
 /**
- * 通知中心 - 统一管理所有 WebSocket 通知
+ * 通知中心 - 统一管理所有 WebSocket 通知和消息提示
  */
 class NotificationCenter {
 	constructor() {
@@ -28,6 +28,82 @@ class NotificationCenter {
 		this.initialized = true
 		console.log('[NotificationCenter] 通知中心已启动')
 	}
+
+	// ==================== 消息提示方法 ====================
+
+	/**
+	 * 显示成功消息
+	 * @param {string} message - 消息内容
+	 * @param {Object} options - 可选配置
+	 */
+	success(message, options = {}) {
+		return ElMessage({
+			message,
+			type: 'success',
+			duration: 3000,
+			...options
+		})
+	}
+
+	/**
+	 * 显示错误消息
+	 * @param {string} message - 消息内容
+	 * @param {Object} options - 可选配置
+	 */
+	error(message, options = {}) {
+		return ElMessage({
+			message,
+			type: 'error',
+			duration: 3000,
+			...options
+		})
+	}
+
+	/**
+	 * 显示警告消息
+	 * @param {string} message - 消息内容
+	 * @param {Object} options - 可选配置
+	 */
+	warning(message, options = {}) {
+		return ElMessage({
+			message,
+			type: 'warning',
+			duration: 3000,
+			...options
+		})
+	}
+
+	/**
+	 * 显示信息消息
+	 * @param {string} message - 消息内容
+	 * @param {Object} options - 可选配置
+	 */
+	info(message, options = {}) {
+		return ElMessage({
+			message,
+			type: 'info',
+			duration: 3000,
+			...options
+		})
+	}
+
+	/**
+	 * 显示确认对话框
+	 * @param {string} message - 消息内容
+	 * @param {string} title - 标题（可选，默认"提示"）
+	 * @param {Object} options - 可选配置
+	 * @returns {Promise} 返回 Promise，确认时 resolve，取消时 reject
+	 */
+	confirm(message, title = '提示', options = {}) {
+		return ElMessageBox.confirm(message, title, {
+			confirmButtonText: '确定',
+			cancelButtonText: '取消',
+			type: 'warning',
+			...options
+		})
+	}
+
+	// ==================== WebSocket 通知方法 ====================
 
 	/**
 	 * 注册通知处理器
@@ -189,3 +265,12 @@ class NotificationCenter {
 // 导出单例
 export const notificationCenter = new NotificationCenter()
 export default notificationCenter
+
+// 导出便捷的消息方法，统一的通知接口
+export const message = {
+	success: (msg, options) => notificationCenter.success(msg, options),
+	error: (msg, options) => notificationCenter.error(msg, options),
+	warning: (msg, options) => notificationCenter.warning(msg, options),
+	info: (msg, options) => notificationCenter.info(msg, options),
+	confirm: (msg, title, options) => notificationCenter.confirm(msg, title, options)
+}

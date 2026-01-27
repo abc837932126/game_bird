@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run update-version && vite build",
+    "build": "npm run update-version && vite build && npm run clear-changelog",
     "update-version": "node scripts/update-version.js",
+    "clear-changelog": "node scripts/clear-changelog.js",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -36,7 +36,7 @@
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">经验:</span>
-					<span class="font-bold text-green-600">{{ bird?.exp || 0 }}</span>
+					<span class="font-bold text-green-600">{{ bird?.exp || 0 }}/{{ bird?.game_bird?.up_exp || 0 }}</span>
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">性别:</span>
@@ -44,7 +44,7 @@
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">类型:</span>
-					<span class="font-bold text-blue-600">{{ getBirdTypeName(bird?.game_bird?.type) }}</span>
+					<span class="font-bold text-blue-600">{{ bird?.game_bird?.game_config_bird_type?.nickname || '未知' }}</span>
 				</div>
 				<div class="flex justify-between p-2 bg-gray-50 rounded">
 					<span class="text-gray-600">体重:</span>
@@ -198,10 +198,11 @@
 </template>
 
 <script setup>
-import { ElButton, ElDialog, ElIcon, ElTag, ElMessage, ElCard, ElInputNumber, ElMessageBox } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElTag, ElCard, ElInputNumber, ElMessageBox } from "element-plus"
 import { ref, inject, computed } from "vue"
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -234,12 +235,6 @@ const show = (birdData) => {
 	vis.value = true
 }
 
-// 获取鸟类型名称
-const getBirdTypeName = (typeId) => {
-	const birdTypes = game.game_config.get_value('game_bird', 'type')
-	return birdTypes?.[typeId] || '未知'
-}
-
 // 经验卡列表
 const expCardList = computed(() => {
 	if (!game.player_item_bird_exp?.data) return []
@@ -267,7 +262,7 @@ const confirmUseExpCard = async () => {
 
 	// 验证数量
 	if (useCount.value < 1 || useCount.value > (selectedExpCard.value.count || 0)) {
-		ElMessage.error('使用数量无效')
+		message.error('使用数量无效')
 		return
 	}
 
@@ -279,7 +274,7 @@ const confirmUseExpCard = async () => {
 		)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '使用成功')
+			message.success(response.data.message || '使用成功')
 			// 更新经验卡数据
 			await game.player_item_bird_exp.update()
 			// 更新当前显示的鸟数据
@@ -291,10 +286,10 @@ const confirmUseExpCard = async () => {
 			expCardSelectionVisible.value = false
 			selectedExpCard.value = null
 		} else {
-			ElMessage.error(response.message || '使用失败')
+			message.error(response.message || '使用失败')
 		}
 	} catch (error) {
-		ElMessage.error('使用失败: ' + error.message)
+		message.error('使用失败: ' + error.message)
 	}
 }
 
@@ -304,14 +299,14 @@ const handleSell = async () => {
 
 	// 检查是否正在使用中
 	if (bird.value.status) {
-		ElMessage.warning(bird.value.statusDetail || '该鸟正在使用中，无法出售')
+		message.warning(bird.value.statusDetail || '该鸟正在使用中，无法出售')
 		return
 	}
 
 	// 检查是否可以出售
 	const basePrice = bird.value.game_bird.price || 0
 	if (basePrice === 0) {
-		ElMessage.error('该鸟无法出售')
+		message.error('该鸟无法出售')
 		return
 	}
 
@@ -333,21 +328,21 @@ const handleSell = async () => {
 		)
 
 		// 调用出售接口
-		const response = await game.player_bird.sell(bird.value.id)
+		const response = await game.player_bird.sell({ player_bird_id: bird.value.id })
 
 		if (response.code === 200) {
 			// 显示实际获得的金币数（从后端返回）
-			ElMessage.success(response.data.message || '出售成功')
+			message.success(response.data.message || '出售成功')
 			// 更新玩家信息（刷新金币）
 			await game.player.update()
 			// 关闭对话框
 			vis.value = false
 		} else {
-			ElMessage.error(response.msg || '出售失败')
+			message.error(response.msg || '出售失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('出售失败: ' + (error.message || error))
+			message.error('出售失败: ' + (error.message || error))
 		}
 	}
 }
@@ -357,7 +352,7 @@ const handleReincarnate = async () => {
 	if (!bird.value) return
 
 	if ((bird.value.lv || 1) < 100) {
-		ElMessage.warning('该鸟未达到100级，无法转生')
+		message.warning('该鸟未达到100级，无法转生')
 		return
 	}
 
@@ -375,17 +370,17 @@ const handleReincarnate = async () => {
 		const response = await game.player_bird.reincarnate(bird.value.id)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '转生成功')
+			message.success(response.data.message || '转生成功')
 			const updatedBird = game.player_bird.data.find(b => b.id === bird.value.id)
 			if (updatedBird) {
 				bird.value = updatedBird
 			}
 		} else {
-			ElMessage.error(response.msg || '转生失败')
+			message.error(response.msg || '转生失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('转生失败: ' + (error.message || error))
+			message.error('转生失败: ' + (error.message || error))
 		}
 	}
 }
@@ -408,7 +403,7 @@ const handleUseGrowthPotion = async () => {
 		const response = await game.player_bird.useGrowthPotion(bird.value.id)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '洗练成功')
+			message.success(response.data.message || '洗练成功')
 			// 更新玩家道具数据
 			await game.player_item_common.update()
 			// 更新当前显示的鸟数据
@@ -417,11 +412,11 @@ const handleUseGrowthPotion = async () => {
 				bird.value = updatedBird
 			}
 		} else {
-			ElMessage.error(response.msg || '洗练失败')
+			message.error(response.msg || '洗练失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('洗练失败: ' + (error.message || error))
+			message.error('洗练失败: ' + (error.message || error))
 		}
 	}
 }
@@ -447,7 +442,7 @@ const handleUseStabilizer = async () => {
 		const response = await game.player_bird.useStabilizer(bird.value.id)
 
 		if (response.code === 200) {
-			ElMessage.success(response.data.message || '使用成功')
+			message.success(response.data.message || '使用成功')
 			// 更新玩家道具数据
 			await game.player_item_common.update()
 			// 更新当前显示的鸟数据
@@ -456,11 +451,11 @@ const handleUseStabilizer = async () => {
 				bird.value = updatedBird
 			}
 		} else {
-			ElMessage.error(response.msg || '使用失败')
+			message.error(response.msg || '使用失败')
 		}
 	} catch (error) {
 		if (error !== 'cancel') {
-			ElMessage.error('使用失败: ' + (error.message || error))
+			message.error('使用失败: ' + (error.message || error))
 		}
 	}
 }

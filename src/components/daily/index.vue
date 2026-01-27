@@ -40,7 +40,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { game } from '../../game'
 
 const checkinData = ref(null)
@@ -107,7 +107,7 @@ async function loadCheckinInfo() {
 		await game.checkin.update()
 		checkinData.value = game.checkin.data
 	} catch (error) {
-		ElMessage.error('加载签到信息失败')
+		message.error('加载签到信息失败')
 	} finally {
 		loading.value = false
 	}
@@ -120,13 +120,13 @@ async function handleCheckin() {
 	try {
 		const res = await game.checkin.doCheckin()
 		if (res.code === 200) {
-			ElMessage.success(`签到成功！获得 ${res.data.reward_amount} ${res.data.reward_type_name}`)
+			message.success(`签到成功！获得 ${res.data.reward_amount} ${res.data.reward_type_name}`)
 			checkinData.value = game.checkin.data
 		} else {
-			ElMessage.error(res.message || '签到失败')
+			message.error(res.message || '签到失败')
 		}
 	} catch (error) {
-		ElMessage.error('签到失败')
+		message.error('签到失败')
 	} finally {
 		loading.value = false
 	}

@@ -156,7 +156,8 @@
 
 <script setup>
 import {inject, computed, ref, onMounted, onActivated} from 'vue'
-import {ElMessage, ElMessageBox, ElBadge} from 'element-plus'
+import { ElMessageBox, ElBadge} from 'element-plus'
+import { message } from '@/game/notification-center'
 import { canManageGuild } from '@/utils/guild-position'
 import CreateGuildDialog from './CreateGuildDialog.vue'
 import SearchGuildDialog from './SearchGuildDialog.vue'
@@ -274,7 +275,7 @@ const handleSalary = () => {
 
 // 邀请成员
 const handleInvite = () => {
-  ElMessage.info('邀请成员功能开发中')
+  message.info('邀请成员功能开发中')
 }
 
 // 查看入会申请
@@ -302,10 +303,10 @@ const handleLeave = async () => {
 
     const res = await game.guild.api.leave()
     if (res.code === 200) {
-      ElMessage.success('已离开工会')
+      message.success('已离开工会')
       await game.guild.update()
     } else {
-      ElMessage.error(res.msg || '离开工会失败')
+      message.error(res.msg || '离开工会失败')
     }
   } catch (error) {
     // 用户取消

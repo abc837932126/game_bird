@@ -82,7 +82,7 @@
 
 <script setup>
 import {ref, inject, computed} from 'vue'
-import {ElMessage} from 'element-plus'
+import {message} from '@/game/notification-center'
 
 const game = inject('game')
 
@@ -96,18 +96,18 @@ const form = ref({
   is_password: false
 })
 
-// 获取玩家余额（红包使用的货币类型，默认为3-星币）
+// 获取玩家余额（红包使用的货币类型，从配置中获取）
 const playerBalance = computed(() => {
-  const redPacketBalanceId = game.game_config.get_value('game', 'red_packet_balance_id') || 3
+  const redPacketBalanceId = game.game_config_red_packet.getCurrencyId()
   const balance = game.player.data?.player_balance?.find(b => b.balance_id === redPacketBalanceId)
   return balance?.count || 0
 })
 
 // 获取玩家余额类型标签
 const playerBalanceType = computed(() => {
-  const redPacketBalanceId = game.game_config.get_value('game', 'red_packet_balance_id') || 3
+  const redPacketBalanceId = game.game_config_red_packet.getCurrencyId()
   const balance = game.player.data?.player_balance?.find(b => b.balance_id === redPacketBalanceId)
-  return balance?.game_config_player_balance?.nickname || ''
+  return balance?.game_config_player_balance?.nickname || game.game_config_red_packet.getCurrencyName()
 })
 
 // 是否可以发送
@@ -121,7 +121,7 @@ const canSend = computed(() => {
 // 发送红包
 const sendRedPacket = async () => {
   if (!canSend.value) {
-    ElMessage.warning('请检查输入参数')
+    message.warning('请检查输入参数')
     return
   }
 
@@ -137,7 +137,7 @@ const sendRedPacket = async () => {
     )
 
     if (response.code === 200) {
-      ElMessage.success('红包发送成功！')
+      message.success('红包发送成功！')
       // 刷新余额
       await game.player.update()
       // 关闭对话框
@@ -150,11 +150,11 @@ const sendRedPacket = async () => {
         is_password: false
       }
     } else {
-      ElMessage.error(response.msg || '发送失败')
+      message.error(response.msg || '发送失败')
     }
   } catch (error) {
     console.error('发送红包失败:', error)
-    ElMessage.error('发送失败，请重试')
+    message.error('发送失败，请重试')
   } finally {
     sending.value = false
   }

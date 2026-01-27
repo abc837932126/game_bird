@@ -5,15 +5,11 @@ import 'element-plus/dist/index.css'
 import App from './App.vue'
 import { game } from './game/index.js'
 import { checkVersion } from './utils/version-check.js'
-import { ElMessage } from 'element-plus'
-import { loadOSSConfig } from './config/oss.js'
+import { message } from '@/game/notification-center'
 import VConsole from 'vconsole'
 
 // 初始化 vConsole（移动端调试工具）
 new VConsole()
-
-// 加载 OSS 配置
-loadOSSConfig()
 
 const app = createApp(App)
 app.use(ElementPlus)
@@ -24,16 +20,16 @@ app.mount('#app')
 checkVersion()
 
 // 注册训练被偷取通知监听器
-game.notificationCenter.on('player_train', 'training_stolen', (message) => {
-	if (message.data && message.data.message) {
-		ElMessage.warning(message.data.message)
+game.notificationCenter.on('player_train', 'training_stolen', (wsMessage) => {
+	if (wsMessage.data && wsMessage.data.message) {
+		message.warning(wsMessage.data.message)
 		// 刷新训练场数据
 		game.player_train.update()
 	}
 }, {
 	showNotification: true,
-	formatMessage: (message) => ({
+	formatMessage: (wsMessage) => ({
 		title: '训练场通知',
-		body: message.data?.message || '你的训练场被偷取了'
+		body: wsMessage.data?.message || '你的训练场被偷取了'
 	})
 })

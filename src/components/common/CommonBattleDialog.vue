@@ -34,6 +34,9 @@
                 <div class="bird-name" :class="{ defeated: getBirdState(targetBirdsState, index + 1)?.isDefeated }">
                   {{ bird.nickname }} <span class="bird-level">Lv.{{ bird.lv }}</span>
                 </div>
+                <div v-if="bird.type_name" class="bird-type">
+                  {{ bird.type_name }}
+                </div>
                 <div class="bird-stats">
                   <span class="stat-item weight">
                     ⚖️
@@ -81,6 +84,9 @@
                 <div class="bird-name" :class="{ defeated: getBirdState(challengerBirdsState, index + 1)?.isDefeated }">
                   {{ bird.nickname }} <span class="bird-level">Lv.{{ bird.lv }}</span>
                 </div>
+                <div v-if="bird.type_name" class="bird-type">
+                  {{ bird.type_name }}
+                </div>
                 <div class="bird-stats">
                   <span class="stat-item weight">
                     ⚖️
@@ -107,12 +113,11 @@
 </template>
 
 <script setup>
-import { ref, watch, inject } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, watch } from 'vue'
+import { message } from '@/game/notification-center'
 import { useBattleLog } from '@/composables/useBattleLog'
 import { getImageUrl } from '@/config/oss'
 
-const game = inject('game')
 
 const vis = ref(false)
 const battleResult = ref(null)
@@ -173,7 +178,7 @@ const startBattle = async () => {
     }
 
     if (response.code !== 200) {
-      ElMessage.error(response.msg)
+      message.error(response.msg)
     }
 
     if (onBattleComplete) {
@@ -184,7 +189,7 @@ const startBattle = async () => {
     showFinalResult()
   } catch (error) {
     console.error('战斗失败:', error)
-    ElMessage.error('战斗失败，请重试')
+    message.error('战斗失败，请重试')
     isAnimating.value = false
   }
 }
@@ -220,36 +225,33 @@ const showFinalResult = () => {
       const rewardText = []
       if (rewards.score) rewardText.push(`天梯分 +${rewards.score}`)
       if (rewards.exp) rewardText.push(`经验 +${rewards.exp}`)
-      if (rewards.balance_1) {
-        const currencyName = getCurrencyName(1)
-        rewardText.push(`${currencyName} +${rewards.balance_1}`)
+      if (rewards.balance_amount && rewards.currency) {
+        const currencyName = rewards.currency.nickname || '未知'
+        rewardText.push(`${currencyName} +${rewards.balance_amount}`)
       }
 
-      ElMessage.success({
-        message: `恭喜获胜！${rewardText.length > 0 ? '获得：' + rewardText.join('，') : ''}`,
-        duration: 5000
-      })
+      message.success(`恭喜获胜！${rewardText.length > 0 ? '获得：' + rewardText.join('，') : ''}`)
     } else {
-      ElMessage.success('恭喜获胜！')
+      message.success('恭喜获胜！')
     }
   } else {
     const penalties = result.penalties
-    if (penalties && penalties.score) {
-      ElMessage.warning({
-        message: `很遗憾，挑战失败了！天梯分 -${penalties.score}`,
-        duration: 3000
-      })
+    if (penalties) {
+      const penaltyText = []
+      if (penalties.score) penaltyText.push(`天梯分 -${penalties.score}`)
+      if (penalties.balance_amount && penalties.currency) {
+        const currencyName = penalties.currency.nickname || '未知'
+        penaltyText.push(`${currencyName} -${penalties.balance_amount}`)
+      }
+
+      message.warning(`很遗憾，挑战失败了！${penaltyText.length > 0 ? '损失：' + penaltyText.join('，') : ''}`)
     } else {
-      ElMessage.warning('很遗憾，挑战失败了！')
+      message.warning('很遗憾，挑战失败了！')
     }
   }
 }
 
-// 获取货币名称
-const getCurrencyName = (balanceId) => {
-  const balance = game.player.data?.player_balance?.find(b => b.balance_id === balanceId)
-  return balance?.game_config_player_balance?.nickname || '未知'
-}
+
 
 defineExpose({
   show
@@ -448,6 +450,17 @@ defineExpose({
 .bird-name.defeated {
   color: #9ca3af;
   text-decoration: line-through;
+}
+
+.bird-type {
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  color: #3b82f6;
+  font-weight: 600;
+  margin-bottom: 1%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .bird-stats {
