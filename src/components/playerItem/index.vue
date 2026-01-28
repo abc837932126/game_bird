@@ -29,6 +29,7 @@
 			<!-- Tab 内容 -->
 			<div class="tabs-content">
 				<BaitList v-if="activeTab === 'bait'" :items="baitList" />
+				<CommonList v-else-if="activeTab === 'common'" :items="commonList" />
 				<BuffList v-else-if="activeTab === 'buff'" :items="buffList" />
 				<TrapList v-else-if="activeTab === 'trap'" :items="trapList" />
 				<BirdExpList v-else-if="activeTab === 'bird_exp'" :items="birdExpList" />
@@ -43,6 +44,7 @@
 <script setup>
 import { inject, ref, computed, onMounted } from 'vue'
 import BaitList from './PlayerBaitList.vue'
+import CommonList from './PlayerCommonList.vue'
 import BuffList from './PlayerBuffList.vue'
 import TrapList from './PlayerTrapList.vue'
 import BirdExpList from './PlayerBirdExpList.vue'
@@ -57,6 +59,7 @@ const activeTab = ref('bait')
 // Tab 配置
 const tabs = [
 	{ name: 'bait', label: '饵料' },
+	{ name: 'common', label: '通用道具' },
 	{ name: 'buff', label: '加成道具' },
 	{ name: 'trap', label: '陷阱' },
 	{ name: 'bird_exp', label: '经验卡片' },
@@ -69,6 +72,12 @@ const tabs = [
 const baitList = computed(() => {
 	if (!game.player_item_bait?.data) return []
 	return game.player_item_bait.data.filter(item => item.count > 0)
+})
+
+// 通用道具列表
+const commonList = computed(() => {
+	if (!game.player_item_common?.data) return []
+	return game.player_item_common.data.filter(item => item.count > 0)
 })
 
 // 加成道具列表（合并三种加成道具）
@@ -121,6 +130,7 @@ const nestList = computed(() => {
 // 加载玩家物品数据
 onMounted(async () => {
 	await game.player_item_bait.update()
+	await game.player_item_common.update()
 	await game.player_item_trap_buff.update()
 	await game.player_item_nest_buff.update()
 	await game.player_item_train_buff.update()

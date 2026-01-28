@@ -43,7 +43,7 @@
 
 			<!-- 金币数量 -->
 			<div>
-				<div class="mb-2 text-sm text-gray-600">赠送金币：</div>
+				<div class="mb-2 text-sm text-gray-600">赠送{{ currentWedding.currency_name || '金币' }}：</div>
 				<el-input-number
 					v-model="goldCoins"
 					:min="10"
@@ -70,7 +70,7 @@
 
 <script setup>
 import { ref, inject } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
 
 const game = inject('game')
@@ -92,7 +92,7 @@ const show = (wedding) => {
 // 提交祝福
 const handleSubmit = async () => {
 	if (!blessingMessage.value.trim()) {
-		ElMessage.warning('请输入祝福语')
+		message.warning('请输入祝福语')
 		return
 	}
 
@@ -105,14 +105,14 @@ const handleSubmit = async () => {
 
 		if (res.code === 200) {
 			// 显示后端返回的消息（包含礼金信息）
-			ElMessage.success(res.msg || '祝福已送达！')
+			message.success(res.msg || '祝福已送达！')
 			vis.value = false
 			emit('success')
 		} else {
-			ElMessage.error(res.msg || '送祝福失败')
+			message.error(res.msg || '送祝福失败')
 		}
 	} catch (error) {
-		ElMessage.error('送祝福失败，请稍后再试')
+		message.error('送祝福失败，请稍后再试')
 	}
 }
 

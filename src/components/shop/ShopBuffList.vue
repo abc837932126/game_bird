@@ -1,5 +1,5 @@
 <template>
-	<div class="grid grid-cols-5 gap-2">
+	<div class="grid grid-cols-4 gap-2">
 		<el-card
 			v-for="item in items"
 			:key="item.id"
@@ -24,7 +24,7 @@
 
 				<!-- 显示价格 -->
 				<p class="text-orange-500">
-					{{ item?.price || 0 }} {{ game.game_config.get_value('game', 'balance_type')?.[item.price_type] }}
+					{{ item?.price || 0 }} {{ item?.game_config_player_balance?.nickname || '未知货币' }}
 				</p>
 
 				<!-- 显示增益百分比 -->
@@ -56,7 +56,7 @@
 			<div class="text-gray-500 text-sm">{{ currentItem?.desc }}</div>
 
 			<div class="text-lg">
-				价格: {{ currentItem?.price || 0 }} {{ game.game_config.get_value('game', 'balance_type')?.[currentItem?.price_type] }}
+				价格: {{ currentItem?.price || 0 }} {{ currentItem?.game_config_player_balance?.nickname || '未知货币' }}
 			</div>
 
 			<!-- 增益效果 -->
@@ -80,7 +80,8 @@
 
 <script setup>
 import { inject, ref } from "vue"
-import { ElButton, ElDialog, ElMessage, ElIcon, ElInputNumber } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElInputNumber } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
 
@@ -141,7 +142,7 @@ const buyItem = async () => {
 		}
 
 		if (res.code === 200) {
-			ElMessage.success(res.msg)
+			message.success(res.msg)
 			dialogVisible.value = false
 			await game.player.update()
 
@@ -154,7 +155,7 @@ const buyItem = async () => {
 				await game.player_item_train_buff.update()
 			}
 		} else {
-			ElMessage.error(res.msg)
+			message.error(res.msg)
 		}
 	} finally {
 		loading.value = false

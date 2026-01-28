@@ -29,6 +29,7 @@
 			<!-- Tab 内容 -->
 			<div class="tabs-content">
 				<BaitList v-if="activeTab === 'bait'" :items="baitList" />
+				<CommonList v-else-if="activeTab === 'common'" :items="commonList" />
 				<BuffList v-else-if="activeTab === 'buff'" :items="buffList" />
 				<TrapList v-else-if="activeTab === 'trap'" :items="trapList" />
 				<TrainList v-else-if="activeTab === 'train'" :items="trainList" />
@@ -42,6 +43,7 @@
 <script setup>
 import { inject, ref, computed, onMounted } from 'vue'
 import BaitList from './ShopBaitList.vue'
+import CommonList from './ShopCommonList.vue'
 import BuffList from './ShopBuffList.vue'
 import TrapList from './ShopTrapList.vue'
 import TrainList from './ShopTrainList.vue'
@@ -55,6 +57,7 @@ const activeTab = ref('bait')
 // Tab 配置
 const tabs = [
 	{ name: 'bait', label: '饵料' },
+	{ name: 'common', label: '通用道具' },
 	{ name: 'buff', label: '加成道具' },
 	{ name: 'trap', label: '陷阱' },
 	{ name: 'train', label: '训练场' },
@@ -65,7 +68,13 @@ const tabs = [
 // 饵料列表
 const baitList = computed(() => {
 	if (!game.game_item_bait?.data) return []
-	return game.game_item_bait.data.filter(item => item.is_shop)
+	return game.game_item_bait.data.filter(item => item.is_shop).sort((a, b) => a.id - b.id)
+})
+
+// 通用道具列表
+const commonList = computed(() => {
+	if (!game.game_item_common?.data) return []
+	return game.game_item_common.data.filter(item => item.is_shop).sort((a, b) => a.id - b.id)
 })
 
 // 加成道具列表（合并三种加成道具）
@@ -82,36 +91,37 @@ const buffList = computed(() => {
 		.filter(item => item.is_shop)
 		.map(item => ({ ...item, _type: 'train' }))
 
-	return [...trapBuffs, ...nestBuffs, ...trainBuffs]
+	return [...trapBuffs, ...nestBuffs, ...trainBuffs].sort((a, b) => a.id - b.id)
 })
 
 // 陷阱列表
 const trapList = computed(() => {
 	if (!game.game_item_trap?.data) return []
-	return game.game_item_trap.data.filter(item => item.is_shop)
+	return game.game_item_trap.data.filter(item => item.is_shop).sort((a, b) => a.id - b.id)
 })
 
 // 训练场列表
 const trainList = computed(() => {
 	if (!game.game_item_train?.data) return []
-	return game.game_item_train.data.filter(item => item.is_shop)
+	return game.game_item_train.data.filter(item => item.is_shop).sort((a, b) => a.id - b.id)
 })
 
 // 戒指列表
 const ringList = computed(() => {
 	if (!game.game_item_ring?.data) return []
-	return game.game_item_ring.data.filter(item => item.is_shop)
+	return game.game_item_ring.data.filter(item => item.is_shop).sort((a, b) => a.id - b.id)
 })
 
 // 鸟窝列表
 const nestList = computed(() => {
 	if (!game.game_item_nest?.data) return []
-	return game.game_item_nest.data.filter(item => item.is_shop)
+	return game.game_item_nest.data.filter(item => item.is_shop).sort((a, b) => a.id - b.id)
 })
 
 // 加载商城数据
 onMounted(async () => {
 	await game.game_item_bait.update()
+	await game.game_item_common.update()
 	await game.game_item_trap_buff.update()
 	await game.game_item_nest_buff.update()
 	await game.game_item_train_buff.update()

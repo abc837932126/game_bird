@@ -83,8 +83,8 @@ export default class player_nest {
 	}
 
 	// 收获幼鸟
-	async harvest() {
-		const res = await this.api.harvest()
+	async harvest(use_fertility_pill = false) {
+		const res = await this.api.harvest({ use_fertility_pill })
 
 		if (res.code === 200) {
 			await this.update();

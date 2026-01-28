@@ -18,7 +18,7 @@ class api {
 	getList = () => request('player_marriage', 'get_list')
 
 	// 开始婚礼
-	startWedding = (proposal_id, gift_money = 0) => request('player_marriage', 'start_wedding', { proposal_id, gift_money })
+	startWedding = (proposal_id, marriage_item_id) => request('player_marriage', 'start_wedding', { proposal_id, marriage_item_id })
 
 	// 获取正在进行的婚礼列表（不包括自己的）
 	getActiveWeddings = () => request('player_marriage', 'get_active_weddings')

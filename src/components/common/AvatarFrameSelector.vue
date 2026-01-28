@@ -41,7 +41,7 @@
 
 <script setup>
 import { ref, inject } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const visible = ref(false)
@@ -66,13 +66,13 @@ const confirmSelect = async () => {
 		if (response.code === 200) {
 			// 更新玩家数据
 			game.player.data.avatar_frame_id = currentFrameId.value
-			ElMessage.success('更换成功')
+			message.success('更换成功')
 			visible.value = false
 		} else {
-			ElMessage.error(response.msg || '更换失败')
+			message.error(response.msg || '更换失败')
 		}
 	} catch (error) {
-		ElMessage.error('更换失败')
+		message.error('更换失败')
 	} finally {
 		loading.value = false
 	}

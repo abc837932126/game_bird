@@ -25,7 +25,7 @@
                 </el-image>
                 <div class="gift-name">{{ gift.nickname }}</div>
                 <div class="gift-price">
-                  {{ gift.price }} {{ game.game_config.get_value('game', 'balance_type')?.[gift.price_type] }}
+                  {{ gift.price }} {{ getCurrencyName(gift.balance_id) }}
                 </div>
               </div>
             </div>
@@ -86,7 +86,7 @@
 
 <script setup>
 import {ref, inject, computed} from 'vue'
-import {ElMessage} from 'element-plus'
+import {message} from '@/game/notification-center'
 import {getImageUrl} from "@/config/oss.js";
 
 
@@ -104,19 +104,29 @@ const backpackGifts = computed(() => {
   return game.player_item_gift.data?.filter(item => item.count > 0) || []
 })
 
-// 获取玩家余额（固定显示 balance_3）
+// 获取玩家余额（根据选中礼物的货币类型）
 const playerBalance = computed(() => {
-  return game.player.data?.balance_3 || 0
+  if (!selectedGift.value) return 0
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === selectedGift.value.balance_id)
+  return balance?.count || 0
 })
 
-// 获取玩家余额类型标签（固定显示 balance_3 的类型）
+// 获取玩家余额类型标签（根据选中礼物的货币类型）
 const playerBalanceType = computed(() => {
-  return game.game_config.get_value('game', 'balance_type')?.[3] || ''
+  if (!selectedGift.value) return ''
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === selectedGift.value.balance_id)
+  return balance?.game_config_player_balance?.nickname || ''
 })
 
 // 获取背包中的礼物数量
 const getBackpackCount = (giftId) => {
   return game.player_item_gift.getCount(giftId)
+}
+
+// 获取货币名称
+const getCurrencyName = (balanceId) => {
+  const balance = game.player.data?.player_balance?.find(b => b.balance_id === balanceId)
+  return balance?.game_config_player_balance?.nickname || '未知'
 }
 
 // 选择礼物
@@ -152,18 +162,18 @@ const sendByPurchase = async () => {
     )
 
     if (response.code === 200) {
-      ElMessage.success('赠送成功！')
+      message.success('赠送成功！')
       // 刷新余额和背包
       await game.player.update()
       await game.player_item_gift.update()
       // 关闭对话框
       visible.value = false
     } else {
-      ElMessage.error(response.msg || '赠送失败')
+      message.error(response.msg || '赠送失败')
     }
   } catch (error) {
     console.error('赠送失败:', error)
-    ElMessage.error('赠送失败，请重试')
+    message.error('赠送失败，请重试')
   } finally {
     sending.value = false
   }
@@ -176,7 +186,7 @@ const sendFromBackpack = async () => {
   // 检查背包数量
   const backpackCount = getBackpackCount(selectedGift.value.id)
   if (backpackCount < giftCount.value) {
-    ElMessage.warning('背包礼物数量不足')
+    message.warning('背包礼物数量不足')
     return
   }
 
@@ -190,17 +200,17 @@ const sendFromBackpack = async () => {
     )
 
     if (response.code === 200) {
-      ElMessage.success('赠送成功！')
+      message.success('赠送成功！')
       // 刷新背包
       await game.player_item_gift.update()
       // 关闭对话框
       visible.value = false
     } else {
-      ElMessage.error(response.msg || '赠送失败')
+      message.error(response.msg || '赠送失败')
     }
   } catch (error) {
     console.error('赠送失败:', error)
-    ElMessage.error('赠送失败，请重试')
+    message.error('赠送失败，请重试')
   } finally {
     sending.value = false
   }

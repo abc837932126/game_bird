@@ -204,20 +204,23 @@
 		</div>
 	</el-card>
 
-	<!-- 选择鸟对话框 -->
-	<BirdSelector
-			v-model="showBirdSelector"
-			:title="`选择配对的鸟（与 ${friendNest?.player_bird_1?.game_bird?.nickname} 配对）`"
-			:filter="birdFilter"
-			@select="handleBirdSelect"
-	/>
+  <!-- 选择鸟对话框 -->
+  <BirdSelector
+      v-model="showBirdSelector"
+      :title="`选择配对的鸟（与 ${friendNest?.player_bird_1?.game_bird?.nickname} 配对）`"
+      :filter="birdFilter"
+      :filter-fields="['has_paired', 'status']"
+      :show-filtered-count="true"
+      @select="handleBirdSelect"
+  />
+
 </template>
 
 <script setup>
 import nestPlaceholder from '../home/nest_placeholder.png'
 import normalNestImg from '../home/normal_nest.png'
 import {ref, inject} from 'vue'
-import {ElMessage} from 'element-plus'
+import { message } from '@/game/notification-center'
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
 import PlayerAvatar from '../common/PlayerAvatar.vue'
@@ -293,14 +296,14 @@ const handleSteal = async (train) => {
 		const response = await game.player_train.steal_reward(targetId, train.id)
 
 		if (response.code === 200) {
-			ElMessage.success(`偷取成功！获得 ${response.data.stolenCards} 张卡片`)
+			message.success(`偷取成功！获得 ${response.data.stolenCards} 张卡片`)
 			emit('refresh')
 		} else {
-			ElMessage.error(response.msg || '偷取失败')
+			message.error(response.msg || '偷取失败')
 		}
 	} catch (error) {
 		console.error('偷取失败:', error)
-		ElMessage.error('偷取失败')
+		message.error('偷取失败')
 	} finally {
 		stealLoading.value = false
 	}
@@ -341,7 +344,7 @@ const birdFilter = (bird) => {
 // 打开鸟选择器
 const handleSetMyBird = () => {
 	if (!props.friendNest || !props.friendNest.player_bird_1) {
-		ElMessage.warning('好友还没有放置鸟')
+		message.warning('好友还没有放置鸟')
 		return
 	}
 	showBirdSelector.value = true
@@ -357,15 +360,15 @@ const handleBirdSelect = async (bird) => {
 		// 在好友的鸟巢位置2设置自己的鸟
 		const response = await game.player_nest.set_bird(2, bird.id, friendPlayerId)
 		if (response.code === 200) {
-			ElMessage.success('设置成功')
+			message.success('设置成功')
 			// 通知父组件刷新
 			emit('refresh')
 		} else {
-			ElMessage.error(response.msg || '设置失败')
+			message.error(response.msg || '设置失败')
 		}
 	} catch (error) {
 		console.error('设置鸟失败:', error)
-		ElMessage.error('设置失败')
+		message.error('设置失败')
 	}
 }
 </script>

@@ -75,7 +75,8 @@
 
 <script setup>
 import { inject, ref } from "vue"
-import { ElButton, ElDialog, ElMessage, ElIcon, ElInputNumber } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElInputNumber } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
 

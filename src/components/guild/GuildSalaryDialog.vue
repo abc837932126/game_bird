@@ -38,7 +38,7 @@
 
 <script setup>
 import { inject, ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const vis = ref(false)
@@ -83,16 +83,16 @@ const handleClaim = async () => {
 		const res = await game.guild.api.claim_salary()
 
 		if (res.code === 200) {
-			ElMessage.success('工资领取成功')
+			message.success('工资领取成功')
 			await game.guild.update()
 			await game.player.update()
 			vis.value = false
 		} else {
-			ElMessage.error(res.msg || '领取失败')
+			message.error(res.msg || '领取失败')
 		}
 	} catch (error) {
 		console.error('领取工资失败:', error)
-		ElMessage.error('领取工资失败')
+		message.error('领取工资失败')
 	} finally {
 		loading.value = false
 	}

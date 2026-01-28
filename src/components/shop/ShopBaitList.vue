@@ -1,5 +1,5 @@
 <template>
-	<div class="grid grid-cols-5 gap-2">
+	<div class="grid grid-cols-4 gap-2">
 		<el-card
 			v-for="item in items"
 			:key="item.id"
@@ -24,11 +24,16 @@
 
 				<!-- 显示价格 -->
 				<p class="text-orange-500">
-					{{ item?.price || 0 }} {{ game.game_config.get_value('game', 'balance_type')?.[item.price_type] }}
+					{{ item?.price || 0 }} {{ item?.game_config_player_balance?.nickname || '未知货币' }}
 				</p>
 
 				<div class="text-xs text-gray-400">
 					等级要求: {{ item?.lv || 0 }}
+				</div>
+
+				<!-- 显示地图限制 -->
+				<div v-if="item?.game_map" class="text-xs text-blue-500">
+					地图: {{ item.game_map.nickname }}
 				</div>
 
 				<!-- 显示可吸引的鸟类 -->
@@ -60,11 +65,15 @@
 			<div class="text-gray-500 text-sm">{{ currentItem?.desc }}</div>
 
 			<div class="text-lg">
-				价格: {{ currentItem?.price || 0 }} {{ game.game_config.get_value('game', 'balance_type')?.[currentItem?.price_type] }}
+				价格: {{ currentItem?.price || 0 }} {{ currentItem?.game_config_player_balance?.nickname || '未知货币' }}
 			</div>
 
 			<div v-if="currentItem?.lv" class="text-sm text-gray-400">
 				等级要求: {{ currentItem.lv }}
+			</div>
+
+			<div v-if="currentItem?.game_map" class="text-sm text-blue-500">
+				地图限制: {{ currentItem.game_map.nickname }}
 			</div>
 
 			<!-- 饵料特有：显示可吸引的鸟类详细列表 -->
@@ -94,7 +103,8 @@
 
 <script setup>
 import { inject, ref } from "vue"
-import { ElButton, ElDialog, ElMessage, ElIcon, ElInputNumber } from "element-plus"
+import { ElButton, ElDialog, ElIcon, ElInputNumber } from 'element-plus'
+import { message } from '@/game/notification-center'
 import { Picture } from "@element-plus/icons-vue"
 import {getImageUrl} from '@/config/oss'
 
@@ -126,12 +136,12 @@ const buyItem = async () => {
 		const res = await game.game_item_bait.buy(currentItem.value.id, buyCount.value)
 
 		if (res.code === 200) {
-			ElMessage.success(res.msg)
+			message.success(res.msg)
 			dialogVisible.value = false
 			await game.player.update()
 			await game.player_item_bait.update()
 		} else {
-			ElMessage.error(res.msg)
+			message.error(res.msg)
 		}
 	} finally {
 		loading.value = false

@@ -61,9 +61,10 @@
 <script setup>
 import {ref, inject, onMounted, watch, onUnmounted} from 'vue'
 import {User, Lock} from '@element-plus/icons-vue'
-import {ElMessage, ElCheckbox} from 'element-plus'
 import { getImageUrl } from '@/config/oss'
 
+import { ElCheckbox} from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const game = inject('game')
 const activeTab = ref('login')
@@ -98,11 +99,11 @@ const submit = async () => {
 	// 注册时验证密码是否一致
 	if (activeTab.value === 'register') {
 		if (form.value.userpass !== form.value.confirmPassword) {
-			ElMessage.error('两次输入的密码不一致')
+			message.error('两次输入的密码不一致')
 			return
 		}
 		if (!form.value.userpass || form.value.userpass.length < 6) {
-			ElMessage.error('密码至少需要6个字符')
+			message.error('密码至少需要6个字符')
 			return
 		}
 	}
@@ -133,9 +134,9 @@ const submit = async () => {
 
 
 		}
-		ElMessage.success(res.msg)
+		message.success(res.msg)
 	} else {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 	}
 
 }

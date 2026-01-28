@@ -52,7 +52,7 @@
 
 <script setup>
 import { inject, ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 
 const emit = defineEmits(['closed'])
 const game = inject('game')
@@ -75,12 +75,12 @@ const show = async (guildId) => {
     if (res.code === 200) {
       guildInfo.value = res.data
     } else {
-      ElMessage.error(res.msg || '获取工会信息失败')
+      message.error(res.msg || '获取工会信息失败')
       vis.value = false
     }
   } catch (error) {
     console.error('获取工会信息失败:', error)
-    ElMessage.error('获取工会信息失败')
+    message.error('获取工会信息失败')
     vis.value = false
   } finally {
     loading.value = false
@@ -98,14 +98,14 @@ const handleApply = async () => {
     })
 
     if (res.code === 200) {
-      ElMessage.success('申请已提交')
+      message.success('申请已提交')
       vis.value = false
     } else {
-      ElMessage.error(res.msg || '申请失败')
+      message.error(res.msg || '申请失败')
     }
   } catch (error) {
     console.error('申请加入工会失败:', error)
-    ElMessage.error('申请失败')
+    message.error('申请失败')
   } finally {
     applying.value = false
   }

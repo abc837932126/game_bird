@@ -108,9 +108,14 @@
 			<el-button size="small" type="warning" @click="start_pairing()" :disabled="!can_start_pairing()">
 				开始配对
 			</el-button>
-			<el-button size="small" type="danger" @click="harvest()" :disabled="!is_pairing_complete()">
-				收获幼鸟
-			</el-button>
+			<div class="flex items-center gap-2">
+				<el-checkbox v-model="use_fertility_pill" :disabled="!is_pairing_complete() || fertility_pill_count === 0">
+					使用{{ game.game_config_special_items.data?.fertility_pill?.nickname || '多胎丸' }} ({{ fertility_pill_count }})
+				</el-checkbox>
+				<el-button size="small" type="danger" @click="harvest()" :disabled="!is_pairing_complete()">
+					收获幼鸟
+				</el-button>
+			</div>
 		</div>
 	</el-card>
 
@@ -118,6 +123,8 @@
 	<BirdSelector
 		v-model="vis_bird_list"
 		:title="`选择配对的鸟（位置${select_slot}）`"
+		:filter-fields="['has_paired', 'status']"
+		:show-filtered-count="true"
 		@select="set_bird"
 	/>
 
@@ -157,11 +164,10 @@
 <script setup>
 import defaultNestImg from './normal_nest.png'
 import nestPlaceholder from './nest_placeholder.png'
-import {inject, onMounted, onUnmounted, onActivated, ref} from "vue";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {inject, onMounted, onUnmounted, onActivated, onDeactivated,ref, computed} from "vue";
+import {message} from '@/game/notification-center'
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
-import {onDeactivated} from "@vue/runtime-core";
 
 
 const game = inject('game')
@@ -171,6 +177,20 @@ const vis_buff_list = ref(false)
 const select_slot = ref(1)
 const timer = ref(null)
 const currentTime = ref(Date.now())
+const use_fertility_pill = ref(false)
+
+// 计算多胎丸数量
+const fertility_pill_count = computed(() => {
+	if (!game.player_item_common.data) return 0
+	// 从配置中获取多胎丸的ID
+	const fertilityPillId = game.game_config_special_items.data?.fertility_pill_id
+	if (!fertilityPillId) return 0
+	// 通过ID查找玩家的多胎丸道具
+	const fertilityPill = game.player_item_common.data.find(item =>
+		item.game_item_common_id === fertilityPillId
+	)
+	return fertilityPill ? fertilityPill.count : 0
+})
 
 const show_bird_list = async (slot) => {
 	await game.player_bird.update()
@@ -189,17 +209,17 @@ const show_buff_list = async () => {
 }
 
 const show_remove_confirm = async (slot) => {
-	ElMessageBox.confirm('确定要移除这只鸟吗？', '提示', {
+	message.confirm('确定要移除这只鸟吗？', '提示', {
 		confirmButtonText: '确定',
 		cancelButtonText: '取消',
 		type: 'warning'
 	}).then(async () => {
 		const res = await game.player_nest.set_bird(slot, null)
 		if (res.code !== 200) {
-			ElMessage.error(res.msg)
+			message.error(res.msg)
 			return
 		}
-		ElMessage.success("移除成功")
+		message.success("移除成功")
 	}).catch(() => {
 		// 取消操作
 	})
@@ -209,20 +229,20 @@ const set_bird = async (bird) => {
 	const res = await game.player_nest.set_bird(select_slot.value, bird?.id || null)
 	vis_bird_list.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success(bird ? "设置成功" : "移除成功")
+	message.success(bird ? "设置成功" : "移除成功")
 }
 
 const use_item = async (item) => {
 	const res = await game.player_nest.use_nest_item(item.id)
 	vis_item_list.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success("使用成功")
+	message.success("使用成功")
 	await game.player_item_nest.update()
 }
 
@@ -230,10 +250,10 @@ const use_buff = async (buff) => {
 	const res = await game.player_nest.use_nest_buff(buff.game_item_nest_buff_id)
 	vis_buff_list.value = false
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success("加速成功")
+	message.success("加速成功")
 	await game.player_nest.update()
 	await game.player_item_nest_buff.update()
 }
@@ -246,10 +266,10 @@ const can_start_pairing = () => {
 const start_pairing = async () => {
 	const res = await game.player_nest.start_pairing()
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success("开始配对")
+	message.success("开始配对")
 }
 
 const is_pairing_complete = () => {
@@ -273,14 +293,21 @@ const is_pairing_complete = () => {
 }
 
 const harvest = async () => {
-	const res = await game.player_nest.harvest()
+	const res = await game.player_nest.harvest(use_fertility_pill.value)
 	if (res.code !== 200) {
-		ElMessage.error(res.msg)
+		message.error(res.msg)
 		return
 	}
-	ElMessage.success(`收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`)
+	const birdsPerPlayer = res.data.birds_per_player || 1
+	const pillName = game.game_config_special_items.data?.fertility_pill?.nickname || '多胎丸'
+	const successMsg = use_fertility_pill.value
+		? `收获成功！使用${pillName}，双方各获得${birdsPerPlayer}只幼鸟，获得经验: ${res.data.player_exp_gained}`
+		: `收获成功！双方各获得一只幼鸟，获得经验: ${res.data.player_exp_gained}`
+	message.success(successMsg)
+	use_fertility_pill.value = false // 重置复选框
 	await game.player_bird.update()
 	await game.player.update()
+	await game.player_item_common.update()
 }
 
 const get_nest_title = () => {
@@ -328,27 +355,6 @@ const get_countdown_deadline = () => {
 	// 返回目标时间戳（毫秒）
 	const targetTime = startTime + duration
 	return targetTime * 1000
-}
-
-const format_pairing_progress = () => {
-	const nest = game.player_nest.data
-	if (!nest || !nest.is_pairing || !nest.start_time || !nest.player_bird_1) {
-		return '0%'
-	}
-
-	const startTime = Number(nest.start_time)
-	const now = Math.floor(currentTime.value / 1000)
-	const needTime = nest.player_bird_1.game_bird.need_time
-
-	// 计算配对时长（捕获时长的一半）
-	let duration = needTime / 2
-	if (nest.game_item_nest && nest.game_item_nest.time > 0) {
-		duration = duration * (1 - nest.game_item_nest.time / 100)
-	}
-
-	const elapsed = now - startTime
-	const progress = Math.min(100, Math.floor((elapsed / duration) * 100))
-	return `${progress}%`
 }
 
 const startTimer = () => {

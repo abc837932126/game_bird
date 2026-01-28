@@ -51,5 +51,5 @@ const pages = {
 
 }
 
-const currentPage = computed(() => pages[game.page] || pages.home)
+const currentPage = computed(() => pages[game.page] || pages.page_home)
 </script>

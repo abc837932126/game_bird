@@ -56,7 +56,7 @@
 
 <script setup>
 import { ref, inject, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from '@/game/notification-center'
 import {getImageUrl} from '@/config/oss'
 import BirdSelector from '../common/BirdSelector.vue'
 
@@ -90,7 +90,7 @@ const show = async () => {
 
 	} catch (error) {
 		console.error('加载数据失败:', error)
-		ElMessage.error('加载数据失败')
+		message.error('加载数据失败')
 	} finally {
 		loading.value = false
 	}
@@ -113,13 +113,13 @@ const confirmSetBird = async (bird) => {
 		const res = await game.player_ladder_lineup.setLineup(selectedSlot.value, bird.id)
 
 		if (res.code === 200) {
-			ElMessage.success('设置成功')
+			message.success('设置成功')
 		} else {
-			ElMessage.error(res.msg || '设置失败')
+			message.error(res.msg || '设置失败')
 		}
 	} catch (error) {
 		console.error('设置阵容失败:', error)
-		ElMessage.error('设置失败')
+		message.error('设置失败')
 	} finally {
 		selectedSlot.value = null
 	}
