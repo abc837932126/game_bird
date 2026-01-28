@@ -99,7 +99,7 @@
 					/>
 					<img
 						v-else
-						:src="nestPlaceholder"
+						:src="normalNestImg"
 						class="nest-heart"
 						alt="巢穴"
 					/>
@@ -215,6 +215,7 @@
 
 <script setup>
 import nestPlaceholder from '../home/nest_placeholder.png'
+import normalNestImg from '../home/normal_nest.png'
 import {ref, inject} from 'vue'
 import {ElMessage} from 'element-plus'
 import {getImageUrl} from '@/config/oss'
